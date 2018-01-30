@@ -4,6 +4,11 @@ import numpy.matlib
 import random
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+from scipy import misc
+from skimage.color import rgb2grey
+from skimage.transform import resize
 # import matplotlib
 # matplotlib.use('gtkagg')
 
@@ -13,7 +18,11 @@ import gym
 # OpenAI Gym Class
 #-----------------------------------
 class MapSimEnv(gym.Env):
-    def __init__(self, gridSize=[100, 100], numObjects=50, maxSize=10, numAgents=1, maxIters=1000):
+    metadata = {
+        'render.modes': ['human', 'rgb_array'],
+        'video.frames_per_second' : 50
+    }
+    def __init__(self, gridSize=[20, 20], numObjects=10, maxSize=10, numAgents=1, maxIters=1000):
         # Set Simulation Params
         self.gridSize = gridSize
         self.numAgents = numAgents
@@ -30,7 +39,7 @@ class MapSimEnv(gym.Env):
             # Generate Agents
             self.agents = agent(gridSize, 1)
             # Generate Plots (should this go in _render()?)
-            self.ax, self.cmap = plot().init()
+            self.ax, self.cmap, self.fig = plot().init()
         # Multi-Agent (returns object of objects)
         else:
             # Generate Agents
@@ -41,11 +50,13 @@ class MapSimEnv(gym.Env):
         print('Environment "mapSim-v1" Successfully Initialized')
 
 
-    def step(self, action):
+    def step(self, action, env):
         self.step_count += 1
         self.agents = self.agents.update_position(action, self.grid)
         self.agents = self.agents.get_reward(self.gridSize)
+        self.ax, img = self.get_image(env)
         if self.step_count == self.term_step:
+            # env.render(mode='rgb_array', close=True)
             self._reset()
         return self
 
@@ -53,12 +64,13 @@ class MapSimEnv(gym.Env):
         self.reward = 0
         self.step_count = 0
         self.term_step = random.randint(self.maxIters/10, self.maxIters)
+        plt.close(self.fig)
         self.grid = generate().world(self.gridSize, self.numObjects, self.maxSize)
         if self.numAgents == 1:
             # Generate Agents
             self.agents = agent(self.gridSize, 1)
             # Generate Plots (should this go in _render()?)
-            self.ax, self.cmap = plot().init()
+            self.ax, self.cmap, self.fig = plot().init()
         # Multi-Agent (returns object of objects)
         else:
             # Generate Agents
@@ -68,17 +80,27 @@ class MapSimEnv(gym.Env):
 
         return self
 
+    def get_image(self, env):
+        self.ax = plot().update(self.ax, self.cmap, self.agents.map)
+        img = self.render_img()
+        img_shape = (100, 100)
+        img = self.process_img(img, img_shape)
+        print(img.shape)
+        return self.ax, img
 
-    def _render(self, mode='human', close='False'):
-        # Need to figure out what this does. Look at cartpole for example
-        # Does it just render the environment? Or capture an image?
-        # If it captures an image, how? In what format (using PIL?)
-        # Will just display image for now
-        plot().update(self.ax, self.cmap, self.grid)
-        # This conflicts with the core.py/render class.
-        # Line 150: close
-        # Ask Dustin about this tomorrow
-        return self
+    def process_img(self, img, img_shape):
+        img = rgb2grey(img)
+        img = resize(img, img_shape)
+        return img
+
+    def render_img(self):
+        filename = 'img.png'
+        plt.savefig(filename, bbox_inches='tight')
+        img = misc.imread('img.png')
+        # canvas = FigureCanvas(self.fig)
+        # canvas.draw()
+        # img = np.fromstring(canvas.tostring_rgb(), dtype='uint8')
+        return img
 
 
 # Base Simulation:
@@ -94,6 +116,7 @@ class generate:
         grid = np.zeros(gridSize)
         for i in range(0, numObjects):
             center = [random.randint(0.1*gridSize[0], 0.9*gridSize[0]), random.randint(0.1*gridSize[1], 0.9*gridSize[1])]
+            # center = [random.randint(0.2*gridSize[0], 0.8*gridSize[0]), random.randint(0.2*gridSize[1], 0.8*gridSize[1])]
             size = random.randint(0, maxSize)
             grid[center[0], center[1]] = 1
             loc = center
@@ -121,8 +144,8 @@ class generate:
 class agent:
     def __init__(self, gridSize, ID):
         self.id = ID+3
+        # Need to add function that ensures starting position is valid
         self.location = (random.randint(1, gridSize[0]-1), random.randint(1, gridSize[0]-1))
-        # self.location = (random.randint(45, 55), random.randint(45, 55))
         self.map = numpy.matlib.repmat(2, gridSize[0], gridSize[1])
         self.map[self.location[0], self.location[1]] = ID+2
         self.reward = 0
@@ -140,9 +163,12 @@ class agent:
         return self, ax
 
     def update_position(self, action, grid): # Incomplete
-        self.validate_action(action, grid)
+        self.map[self.location[0], self.location[1]] = grid[self.location[0], self.location[1]]
+        self = self.validate_action(action, grid)
+        self.map[self.location[0], self.location[1]] = self.id
         self = self.view(grid)
         return self
+
 
     def validate_action(self, action, grid): # Incomplete
         valid = 'false'
@@ -194,7 +220,6 @@ class agent:
         met, cmap = self.meet(agents, gridSize, met, cmap)
         if met == 'true':
             agents = self.shareMap(agents, gridSize)
-
         return agents, met, cmap
 
     def meet(self, agents, gridSize, met, cmap):
@@ -217,6 +242,7 @@ class agent:
         #r = sum(abs(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[0].map)+sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[1].map)))/(gridSize[0]*gridSize[1]*4)
         self.reward = sum(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-self.map))/[gridSize[0]*gridSize[1]*2]
         return self
+        # Single Agent (return single object)
 
 class plot:
     def init(self):
@@ -224,7 +250,7 @@ class plot:
         fig = plt.figure()
         ax = fig.add_subplot(111)
         cmap = ListedColormap(['w', 'b', 'k', 'r'])
-        return ax, cmap
+        return ax, cmap, fig
 
     def multiInit(self, numAgents):
         plt.ion()
@@ -237,10 +263,10 @@ class plot:
         return ax, cmap
 
     def update(self, ax, cmap, grid):
+        plt.cla()
         ax.matshow(grid, cmap=cmap)
         plt.draw()
-        plt.pause(0.1)
-        plt.cla()
+        plt.pause(0.00000001)
         return ax
 
     def multiUpdate(self, ax, cmap, agents, numAgents, fig):
