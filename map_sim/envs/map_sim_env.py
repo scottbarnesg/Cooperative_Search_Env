@@ -23,7 +23,7 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=100):
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=100, interactive='True'):
         # Set Simulation Params
         self.gridSize = gridSize
         self.numAgents = numAgents
@@ -34,6 +34,7 @@ class MapSimEnv(gym.Env):
         self.maxIters = maxIters
         self.numObjects = numObjects
         self.term_step = random.randint(maxIters/10, maxIters)
+        self.interactive = interactive
         # Generate Master Map
         self.grid = generate().world(gridSize, numObjects, maxSize)
         # Single Agent (return single object)
@@ -41,7 +42,7 @@ class MapSimEnv(gym.Env):
             # Generate Agents
             self.agents = agent(gridSize, self.grid, 1)
             # Generate Plots (should this go in _render()?)
-            self.ax, self.cmap, self.fig = plot().init()
+            self.ax, self.cmap, self.fig = plot().init(interactive)
         # Multi-Agent (returns object of objects)
         else:
             # Generate Agents
@@ -76,7 +77,7 @@ class MapSimEnv(gym.Env):
             # Generate Agents
             self.agents = agent(self.gridSize, self.grid, 1)
             # Generate Plots (should this go in _render()?)
-            self.ax, self.cmap, self.fig = plot().init()
+            self.ax, self.cmap, self.fig = plot().init(self.interactive)
         # Multi-Agent (returns object of objects)
         else:
             # Generate Agents
@@ -89,7 +90,7 @@ class MapSimEnv(gym.Env):
         return self, img
 
     def get_image(self):
-        self.ax = plot().update(self.ax, self.cmap, self.agents.map)
+        self.ax = plot().update(self.ax, self.cmap, self.agents.map, self.interactive)
         img = self.render_img()
         img_shape = (100, 100, 1)
         img = self.process_img(img, img_shape)
@@ -137,7 +138,7 @@ class generate:
     def growObject(self, grid, location, index, gridSize):
         if index == 0: # Up
             location[1] = location[1]+1
-        elif index == 1: # Right
+        elif index == 1: # Right        self.interactive = interactive
             location[0] = location[0]+1
         elif index == 2: # Down
             location[1] = location[1]-1
@@ -265,8 +266,11 @@ class agent:
         # Single Agent (return single object)
 
 class plot:
-    def init(self):
-        plt.ion()
+    def init(self, interactive):
+        if interactive == 'False':
+            plt.ioff()
+        else:
+            plt.ion()
         fig = plt.figure()
         ax = fig.add_subplot(111)
         cmap = ListedColormap(['w', 'b', 'k', 'r'])
@@ -282,11 +286,12 @@ class plot:
 
         return ax, cmap
 
-    def update(self, ax, cmap, grid):
+    def update(self, ax, cmap, grid, interactive):
         plt.cla()
         ax.matshow(grid, cmap=cmap)
-        plt.draw()
-        # plt.pause(0.00000001)
+        if interactive == 'True':
+            plt.draw()
+            plt.pause(0.00000001)
         return ax
 
     def multiUpdate(self, ax, cmap, agents, numAgents, fig):
