@@ -161,7 +161,7 @@ def test(env_id, policy_name, seed, nstack=4):
         img = get_img(env)
         img_hist.append(process_img(img))
         imsave(os.path.join(frames_dir, 'frame_{:04d}.png'.format(tidx)), resize(img, (img_shape[0], img_shape[1], 3)))
-        print(tidx, '\tAction: ', action, '\tValues: ', value, '\tRewards: ', reward, '\tTotal rewards: ', total_rewards, flush=True)
+        print(tidx, '\tAction: ', action, '\tValues: ', value, '\tRewards: ', reward, '\tTotal rewards: ', total_rewards)#, flush=True)
         if done:
             print('Faultered at tidx: ', tidx)
             break
