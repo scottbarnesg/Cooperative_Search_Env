@@ -9,7 +9,7 @@
 #SBATCH -N 1
 #SBATCH -p debug-cpu
 
-#SBATCH -D /home/scottgbarnes/map_sim
+#SBATCH -D /home/scottgbarnes/Cooperative-Search-Gym
 #SBATCH -J mapsim
 
 #SBATCH -t 4:00:00
