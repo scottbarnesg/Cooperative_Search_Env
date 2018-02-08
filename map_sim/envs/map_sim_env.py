@@ -14,6 +14,7 @@ from skimage.transform import resize
 
 # OpenAI Utils
 import gym
+from gym import spaces
 
 # OpenAI Gym Class
 #-----------------------------------
@@ -22,12 +23,13 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=10, maxSize=10, numAgents=1, maxIters=1000):
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=100):
         # Set Simulation Params
         self.gridSize = gridSize
         self.numAgents = numAgents
         self.maxSize = maxSize
-        self.action_space = (0, 1, 2, 3)
+        # self.action_space = (0, 1, 2, 3)
+        self.action_space = spaces.Discrete(4)
         self.step_count = 0
         self.maxIters = maxIters
         self.numObjects = numObjects
@@ -37,7 +39,7 @@ class MapSimEnv(gym.Env):
         # Single Agent (return single object)
         if numAgents == 1:
             # Generate Agents
-            self.agents = agent(gridSize, 1)
+            self.agents = agent(gridSize, self.grid, 1)
             # Generate Plots (should this go in _render()?)
             self.ax, self.cmap, self.fig = plot().init()
         # Multi-Agent (returns object of objects)
@@ -50,15 +52,19 @@ class MapSimEnv(gym.Env):
         print('Environment "mapSim-v1" Successfully Initialized')
 
 
-    def step(self, action, env):
+    def _step(self, action):
         self.step_count += 1
         self.agents = self.agents.update_position(action, self.grid)
         self.agents = self.agents.get_reward(self.gridSize)
-        self.ax, img = self.get_image(env)
+        self.ax, img = self.get_image()
         if self.step_count == self.term_step:
-            # env.render(mode='rgb_array', close=True)
+            # done = bool(1)
+            done = 1
             self._reset()
-        return self
+        else:
+            done = 0
+            # done = bool(0)
+        return img, self.agents.reward, done, {}
 
     def _reset(self):
         self.reward = 0
@@ -68,7 +74,7 @@ class MapSimEnv(gym.Env):
         self.grid = generate().world(self.gridSize, self.numObjects, self.maxSize)
         if self.numAgents == 1:
             # Generate Agents
-            self.agents = agent(self.gridSize, 1)
+            self.agents = agent(self.gridSize, self.grid, 1)
             # Generate Plots (should this go in _render()?)
             self.ax, self.cmap, self.fig = plot().init()
         # Multi-Agent (returns object of objects)
@@ -78,14 +84,15 @@ class MapSimEnv(gym.Env):
             # Generate Plots (should this go in _render()?)
             self.ax, self.cmap = plot().multiInit(self.numAgents)
 
-        return self
+        self.ax, img = self.get_image()
 
-    def get_image(self, env):
+        return self, img
+
+    def get_image(self):
         self.ax = plot().update(self.ax, self.cmap, self.agents.map)
         img = self.render_img()
-        img_shape = (100, 100)
+        img_shape = (100, 100, 1)
         img = self.process_img(img, img_shape)
-        print(img.shape)
         return self.ax, img
 
     def process_img(self, img, img_shape):
@@ -142,14 +149,27 @@ class generate:
         return location, grid
 
 class agent:
-    def __init__(self, gridSize, ID):
+    def __init__(self, gridSize, grid, ID):
         self.id = ID+3
         # Need to add function that ensures starting position is valid
-        self.location = (random.randint(1, gridSize[0]-1), random.randint(1, gridSize[0]-1))
+        # self.location = (random.randint(1, gridSize[0]-1), random.randint(1, gridSize[0]-1))
+        self.location = self.init_location(gridSize, grid)
         self.map = numpy.matlib.repmat(2, gridSize[0], gridSize[1])
         self.map[self.location[0], self.location[1]] = ID+2
         self.reward = 0
         self.gridSize = gridSize
+
+    def init_location(self, gridSize, grid):
+        valid = 'false'
+        while valid == 'false':
+            tempLocation = (random.randint(1, gridSize[0]-1), random.randint(1, gridSize[0]-1))
+            if (tempLocation[0] > 1 and tempLocation[1] > 1 and tempLocation[0] < gridSize[0]-1 and tempLocation[1] < gridSize[1]-1):
+                if grid[tempLocation[0], tempLocation[1]] == 0:
+                    valid = 'true'
+                    location = tempLocation
+
+        return location
+
 
     def step(self, grid, gridSize, ax, cmap):
         self.map[self.location[0], self.location[1]] = grid[self.location[0], self.location[1]]
@@ -177,8 +197,8 @@ class agent:
             if grid[tempLocation[0], tempLocation[1]] == 0:
                 self.location = tempLocation
                 valid = 'true'
-        if valid == 'false':
-            self.reward -= 1
+        # if valid == 'false':
+            # self.reward -= 1
         return self
 
     def direction(self, inpt):
@@ -240,7 +260,7 @@ class agent:
 
     def get_reward(self, gridSize):
         #r = sum(abs(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[0].map)+sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[1].map)))/(gridSize[0]*gridSize[1]*4)
-        self.reward = sum(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-self.map))/[gridSize[0]*gridSize[1]*2]
+        self.reward = float(sum(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-self.map))/[gridSize[0]*gridSize[1]*2])
         return self
         # Single Agent (return single object)
 
@@ -266,7 +286,7 @@ class plot:
         plt.cla()
         ax.matshow(grid, cmap=cmap)
         plt.draw()
-        plt.pause(0.00000001)
+        # plt.pause(0.00000001)
         return ax
 
     def multiUpdate(self, ax, cmap, agents, numAgents, fig):
