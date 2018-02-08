@@ -15,4 +15,4 @@
 #SBATCH -t 4:00:00
 
 module load anaconda/4.4.6
-python3 run_mapEnv.py
+python run_mapEnv.py
