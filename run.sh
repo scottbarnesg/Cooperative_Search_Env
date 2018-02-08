@@ -7,12 +7,12 @@
 #SBATCH --mail-user=scottgbarnes@gwu.edu
 
 #SBATCH -N 1
-#SBATCH -p cpu
+#SBATCH -p debug-cpu
 
 #SBATCH -D /home/scottgbarnes/map_sim
 #SBATCH -J mapsim
 
-#SBATCH -t 24:00:00
+#SBATCH -t 4:00:00
 
 module load anaconda/4.4.6
 python3 run_mapEnv.py
