@@ -10,7 +10,7 @@
 #SBATCH -p cpu
 
 #SBATCH -D /home/scottgbarnes/map_sim
-#SBATCH -J search_v2_1
+#SBATCH -J mapsim
 
 #SBATCH -t 24:00:00
 
