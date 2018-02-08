@@ -26,12 +26,9 @@ class GymVecEnv(VecEnv):
         self.envs = [fn() for fn in env_fns]
         self.remotes = [0]*len(env_fns)
         env = self.envs[0]
-        print(self.envs)
-        print(env.env.action_space)
         self.action_space = env.action_space
         img_shape = (100, 100, 1)
         self.observation_space = spaces.Box(low=0, high=255, shape=img_shape)
-        print(self.observation_space.shape)
         self.ts = np.zeros(len(self.envs), dtype='int')
 
     def step(self, action_n):
