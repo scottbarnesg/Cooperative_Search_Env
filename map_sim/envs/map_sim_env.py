@@ -23,7 +23,7 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=100, interactive='False'):
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=200, interactive='True'):
         # Set Simulation Params
         self.gridSize = gridSize
         self.numAgents = numAgents
@@ -33,7 +33,8 @@ class MapSimEnv(gym.Env):
         self.step_count = 0
         self.maxIters = maxIters
         self.numObjects = numObjects
-        self.term_step = random.randint(maxIters/10, maxIters)
+        # self.term_step = random.randint(maxIters/10, maxIters)
+        self.term_step = maxIters
         self.interactive = interactive
         # Generate Master Map
         self.grid = generate().world(gridSize, numObjects, maxSize)
@@ -70,7 +71,7 @@ class MapSimEnv(gym.Env):
     def _reset(self):
         self.reward = 0
         self.step_count = 0
-        self.term_step = random.randint(self.maxIters/10, self.maxIters)
+        # self.term_step = random.randint(self.maxIters/10, self.maxIters)
         plt.close(self.fig)
         self.grid = generate().world(self.gridSize, self.numObjects, self.maxSize)
         if self.numAgents == 1:
@@ -158,6 +159,7 @@ class agent:
         self.map = numpy.matlib.repmat(2, gridSize[0], gridSize[1])
         self.map[self.location[0], self.location[1]] = ID+2
         self.reward = 0
+        self.r_old = 0
         self.gridSize = gridSize
 
     def init_location(self, gridSize, grid):
@@ -261,7 +263,9 @@ class agent:
 
     def get_reward(self, gridSize):
         #r = sum(abs(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[0].map)+sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[1].map)))/(gridSize[0]*gridSize[1]*4)
-        self.reward = float(sum(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-self.map))/[gridSize[0]*gridSize[1]*2])
+        r_current = float(sum(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-self.map))/[gridSize[0]*gridSize[1]*2])
+        self.reward = r_current-self.r_old
+        self.r_old = r_current
         return self
         # Single Agent (return single object)
 

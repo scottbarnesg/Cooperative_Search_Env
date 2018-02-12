@@ -112,18 +112,18 @@ def test(env_id, policy_name, seed, nstack=4):
         else:
             env.action_space.n = 10
     gym.logger.setLevel(logging.WARN)
-
+    img_shape = (100, 100, 1)
     ob_space = spaces.Box(low=0, high=255, shape=img_shape)
     ac_space = env.action_space
 
-    def get_img(env):
-        img = env.render(mode='rgb_array', close=False)
-        return img
+    # def get_img(env):
+    #     ax, img = env.get_img()
+    #    return ax, img
 
-    def process_img(img):
-        img = rgb2grey(copy.deepcopy(img))
-        img = resize(img, img_shape)
-        return img
+    # def process_img(img):
+    #     img = rgb2grey(copy.deepcopy(img))
+    #    img = resize(img, img_shape)
+    #    return img
 
     policy_fn = policy_fn_name(policy_name)
 
@@ -143,9 +143,9 @@ def test(env_id, policy_name, seed, nstack=4):
 
     model.load('test_model.pkl')
 
-    ob = env.reset()
-    img = get_img(env)
-    img_hist = deque([process_img(img) for _ in range(4)], maxlen=nstack)
+    env.env, img = env.reset()
+    # ax, img = get_img(env)
+    img_hist = deque([img for _ in range(4)], maxlen=nstack)
     action = 0
     total_rewards = 0
     nstack = 2
@@ -156,10 +156,10 @@ def test(env_id, policy_name, seed, nstack=4):
             action = actions[0]
             value = values[0]
 
-        ob, reward, done, _ = env.step(action)
+        img, reward, done, _ = env.step(action)
         total_rewards += reward
-        img = get_img(env)
-        img_hist.append(process_img(img))
+        # img = get_img(env)
+        # img_hist.append(img)
         imsave(os.path.join(frames_dir, 'frame_{:04d}.png'.format(tidx)), resize(img, (img_shape[0], img_shape[1], 3)))
         print(tidx, '\tAction: ', action, '\tValues: ', value, '\tRewards: ', reward, '\tTotal rewards: ', total_rewards)#, flush=True)
         if done:
