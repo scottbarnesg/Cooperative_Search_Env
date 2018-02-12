@@ -12,7 +12,7 @@
 #SBATCH -D /home/scottgbarnes/Cooperative-Search-Gym
 #SBATCH -J mapsim
 
-#SBATCH -t 4:00:00
+#SBATCH -t 24:00:00
 
-module load anaconda/4.4.6
+module load anaconda
 python run_mapEnv.py
