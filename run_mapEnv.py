@@ -192,4 +192,4 @@ if __name__ == '__main__':
         test(args.env, args.policy, args.seed, nstack=2, interactive=True)
     else:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-              policy=args.policy, lrschedule=args.lrschedule, num_cpu=1, continuous_actions=continuous_actions, interactive=False)
+              policy=args.policy, lrschedule=args.lrschedule, num_cpu=8, continuous_actions=continuous_actions, interactive=False)
