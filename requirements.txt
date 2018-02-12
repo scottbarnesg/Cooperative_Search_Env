@@ -25,7 +25,6 @@ dill==0.2.7.1
 distributed==1.20.2
 enum34==1.1.6
 future==0.16.0
--e git+https://github.com/openai/gym@0c91364cd4a7ea70f242a28b85c3aea2d74aa35a#egg=gym
 heapdict==1.0.0
 html5lib==0.9999999
 idna==2.6
