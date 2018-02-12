@@ -8,14 +8,14 @@ import tensorflow as tf
 
 from scipy.misc import imsave
 
-from baselines import logger
-from baselines.common import set_global_seeds
-from baselines import bench
-from baselines.common.vec_env import VecEnv
+from baselines.baselines import logger
+from baselines.baselines.common import set_global_seeds
+from baselines.baselines import bench
+from baselines.baselines.common.vec_env import VecEnv
 #from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-from baselines.a2c.a2c import learn, Model
-from baselines.a2c.policies import CnnPolicy, LstmPolicy, LnLstmPolicy
-from baselines.a2c.utils import fc, conv, conv_to_fc, sample
+from baselines.baselines.a2c.a2c import learn, Model
+from baselines.baselines.a2c.policies import CnnPolicy, LstmPolicy, LnLstmPolicy
+from baselines..baselines.a2c.utils import fc, conv, conv_to_fc, sample
 
 import gym
 from gym import spaces
@@ -192,4 +192,4 @@ if __name__ == '__main__':
         test(args.env, args.policy, args.seed, nstack=2, interactive=True)
     else:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-              policy=args.policy, lrschedule=args.lrschedule, num_cpu=8, continuous_actions=continuous_actions, interactive=False)
+              policy=args.policy, lrschedule=args.lrschedule, num_cpu=4, continuous_actions=continuous_actions, interactive=False)
