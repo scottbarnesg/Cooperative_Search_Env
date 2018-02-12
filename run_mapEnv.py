@@ -75,7 +75,7 @@ def policy_fn_name(policy_name):
         policy_fn = MlpPolicy
     return policy_fn
 
-def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_actions=False):
+def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_actions=False, interactive=True):
     def make_env(rank):
         def _thunk():
             env = gym.make(env_id)
@@ -176,6 +176,7 @@ if __name__ == '__main__':
     parser.add_argument('--num-timesteps', type=int, default=int(10e6))
     parser.add_argument('-c', '--continuous_actions', default=False, action='store_true')
     parser.add_argument('--test', default=False, action='store_true')
+    parser.add_argument('--interactive', default=False, action='store_true')
     args = parser.parse_args()
     logger.configure()
 
@@ -188,7 +189,7 @@ if __name__ == '__main__':
 
 
     if args.test:
-        test(args.env, args.policy, args.seed, nstack=2)
+        test(args.env, args.policy, args.seed, nstack=2, interactive=True)
     else:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-              policy=args.policy, lrschedule=args.lrschedule, num_cpu=1, continuous_actions=continuous_actions)
+              policy=args.policy, lrschedule=args.lrschedule, num_cpu=1, continuous_actions=continuous_actions, interactive=False)
