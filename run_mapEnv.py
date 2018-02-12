@@ -15,7 +15,7 @@ from baselines.baselines.common.vec_env import VecEnv
 #from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 from baselines.baselines.a2c.a2c import learn, Model
 from baselines.baselines.a2c.policies import CnnPolicy, LstmPolicy, LnLstmPolicy
-from baselines..baselines.a2c.utils import fc, conv, conv_to_fc, sample
+from baselines.baselines.a2c.utils import fc, conv, conv_to_fc, sample
 
 import gym
 from gym import spaces
