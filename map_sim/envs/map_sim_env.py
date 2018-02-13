@@ -33,11 +33,12 @@ class MapSimEnv(gym.Env):
         self.step_count = 0
         self.maxIters = maxIters
         self.numObjects = numObjects
-        # self.term_step = random.randint(maxIters/10, maxIters)
+        # self.term_step = random.randint(maxIters/2, maxIters)
         self.term_step = maxIters
         self.interactive = interactive
         # Generate Master Map
         self.grid = generate().world(gridSize, numObjects, maxSize)
+        self.simID = random.randint(1, 1000000)
         # Single Agent (return single object)
         if numAgents == 1:
             # Generate Agents
@@ -103,9 +104,9 @@ class MapSimEnv(gym.Env):
         return img
 
     def render_img(self):
-        filename = 'img.png'
-        plt.savefig(filename, bbox_inches='tight')
-        img = misc.imread('img.png')
+        filename = 'img' + str(self.simID) + '.png'
+        self.fig.savefig(filename, bbox_inches='tight')
+        img = misc.imread(filename)
         # canvas = FigureCanvas(self.fig)
         # canvas.draw()
         # img = np.fromstring(canvas.tostring_rgb(), dtype='uint8')
@@ -194,12 +195,12 @@ class agent:
 
 
     def validate_action(self, action, grid): # Incomplete
-        valid = 'false'
+        self.valid = 'false'
         tempLocation = self.direction(action)
         if (tempLocation[0] > 1 and tempLocation[1] > 1 and tempLocation[0] < self.gridSize[0]-1 and tempLocation[1] < self.gridSize[1]-1):
             if grid[tempLocation[0], tempLocation[1]] == 0:
                 self.location = tempLocation
-                valid = 'true'
+                self.valid = 'true'
         # if valid == 'false':
             # self.reward -= 1
         return self
@@ -263,9 +264,13 @@ class agent:
 
     def get_reward(self, gridSize):
         #r = sum(abs(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[0].map)+sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[1].map)))/(gridSize[0]*gridSize[1]*4)
-        r_current = float(sum(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-self.map))/[gridSize[0]*gridSize[1]*2])
-        self.reward = r_current-self.r_old
+        # r_current = float(sum(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-self.map))/[gridSize[0]*gridSize[1]*2])
+        r_current = float(sum(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-self.map))/16)
+        self.reward = r_current-self.r_old-0.1
         self.r_old = r_current
+        if self.valid == 'false':
+            self.reward -= 0.9
+        print(self.reward)
         return self
         # Single Agent (return single object)
 
@@ -291,7 +296,7 @@ class plot:
         return ax, cmap
 
     def update(self, ax, cmap, grid, interactive):
-        plt.cla()
+        ax.cla()
         ax.matshow(grid, cmap=cmap)
         if interactive == 'True':
             plt.draw()
@@ -303,7 +308,7 @@ class plot:
             ax[i].matshow(agents[i].map, cmap=cmap)
             plt.draw()
         plt.pause(0.00000001)
-        plt.cla()
+        # plt.cla()
         return ax
 
     def showGrid(self, grid) :

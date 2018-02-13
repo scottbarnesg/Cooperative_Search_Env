@@ -24,6 +24,7 @@ from gym.envs import map_sim
 class GymVecEnv(VecEnv):
     def __init__(self, env_fns):
         self.envs = [fn() for fn in env_fns]
+        print(self.envs)
         self.remotes = [0]*len(env_fns)
         env = self.envs[0]
         self.action_space = env.action_space
@@ -75,11 +76,12 @@ def policy_fn_name(policy_name):
         policy_fn = MlpPolicy
     return policy_fn
 
-def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_actions=False, interactive=True):
+def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_actions=False):
     def make_env(rank):
         def _thunk():
             env = gym.make(env_id)
             env.seed(seed+rank)
+            env.ID = rank
             print("logger dir: ", logger.get_dir())
             env = bench.Monitor(env, logger.get_dir() and os.path.join(logger.get_dir(), str(rank)))
             if env_id == 'Pendulum-v0':
@@ -92,7 +94,6 @@ def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_a
         return _thunk
 
     env = GymVecEnv([make_env(idx) for idx in range(num_cpu)])
-
     policy_fn = policy_fn_name(policy)
     learn(policy_fn, env, seed, nstack=2, total_timesteps=int(num_timesteps * 1.1), lr=0.001, lrschedule=lrschedule, continuous_actions=continuous_actions)
 
@@ -189,7 +190,7 @@ if __name__ == '__main__':
 
 
     if args.test:
-        test(args.env, args.policy, args.seed, nstack=2, interactive=True)
+        test(args.env, args.policy, args.seed, nstack=2)
     else:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-              policy=args.policy, lrschedule=args.lrschedule, num_cpu=4, continuous_actions=continuous_actions, interactive=False)
+              policy=args.policy, lrschedule=args.lrschedule, num_cpu=4, continuous_actions=continuous_actions)
