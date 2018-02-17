@@ -7,7 +7,7 @@
 #SBATCH --mail-user=scottgbarnes@gwu.edu
 
 #SBATCH -N 1
-#SBATCH -p 128gb
+#SBATCH -p defq
 
 #SBATCH -D /home/scottgbarnes/Cooperative-Search-Gym
 #SBATCH -J mapsim
