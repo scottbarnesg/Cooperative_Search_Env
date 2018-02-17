@@ -174,7 +174,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
     parser.add_argument('--policy', help='Policy architecture', choices=['cnn', 'lstm', 'lnlstm', 'mlp'], default='cnn')
     parser.add_argument('--lrschedule', help='Learning rate schedule', choices=['constant', 'linear'], default='constant')
-    parser.add_argument('--num-timesteps', type=int, default=int(10e6))
+    parser.add_argument('--num-timesteps', type=int, default=int(10e7))
     parser.add_argument('-c', '--continuous_actions', default=False, action='store_true')
     parser.add_argument('--test', default=False, action='store_true')
     parser.add_argument('--interactive', default=False, action='store_true')
@@ -193,4 +193,4 @@ if __name__ == '__main__':
         test(args.env, args.policy, args.seed, nstack=2)
     else:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-              policy=args.policy, lrschedule=args.lrschedule, num_cpu=4, continuous_actions=continuous_actions)
+              policy=args.policy, lrschedule=args.lrschedule, num_cpu=8, continuous_actions=continuous_actions)

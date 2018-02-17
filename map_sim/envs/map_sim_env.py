@@ -23,7 +23,7 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=200, interactive='False'):
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=200, interactive='True'):
         # Set Simulation Params
         self.gridSize = gridSize
         self.numAgents = numAgents
@@ -270,7 +270,6 @@ class agent:
         self.r_old = r_current
         if self.valid == 'false':
             self.reward -= 0.9
-        print(self.reward)
         return self
         # Single Agent (return single object)
 
