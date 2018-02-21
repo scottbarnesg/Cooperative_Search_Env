@@ -95,7 +95,7 @@ def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_a
 
     env = GymVecEnv([make_env(idx) for idx in range(num_cpu)])
     policy_fn = policy_fn_name(policy)
-    learn(policy_fn, env, seed, nstack=2, total_timesteps=int(num_timesteps * 1.1), lr=0.001, lrschedule=lrschedule, continuous_actions=continuous_actions)
+    learn(policy_fn, env, seed, nstack=2, total_timesteps=int(num_timesteps * 1.1), lr=0.0005, lrschedule=lrschedule, continuous_actions=continuous_actions)
 
 def test(env_id, policy_name, seed, nstack=4):
     frames_dir = 'exp_frames'
