@@ -1,127 +1,77 @@
-# packages in environment at /home/scott/anaconda2/envs/tensorflow3:
-#
-atari-py                  0.1.1                     <pip>
-azure                     1.0.3                     <pip>
-azure-common              1.1.8                     <pip>
-azure-mgmt                0.20.2                    <pip>
-azure-mgmt-common         0.20.0                    <pip>
-azure-mgmt-compute        0.20.1                    <pip>
-azure-mgmt-network        0.20.1                    <pip>
-azure-mgmt-nspkg          2.0.0                     <pip>
-azure-mgmt-resource       0.20.1                    <pip>
-azure-mgmt-storage        0.20.0                    <pip>
-azure-nspkg               2.0.0                     <pip>
-azure-servicebus          0.20.1                    <pip>
-azure-servicemanagement-legacy 0.20.2                    <pip>
-azure-storage             0.20.3                    <pip>
-bleach                    1.5.0                     <pip>
-bokeh                     0.12.13          py35h2f9c1c0_0  
-ca-certificates           2017.08.26           h1d4fec5_0  
-certifi                   2017.11.5        py35h9749603_0  
-chardet                   3.0.4                     <pip>
-click                     6.7              py35h353a69f_0  
-cloudpickle               0.5.2            py35hbe86bc5_0  
-cycler                    0.10.0           py35hc4d5149_0  
-cycler                    0.10.0                    <pip>
-dask                      0.16.1                   py35_0  
-dask-core                 0.16.1                   py35_0  
-dbus                      1.12.2               hd3e2b69_0  
-decorator                 4.2.1                    py35_0  
-dill                      0.2.7.1                   <pip>
-distributed               1.20.2                   py35_0  
-enum34                    1.1.6                     <pip>
-expat                     2.2.5                he0dffb1_0  
-fontconfig                2.12.4               h88586e7_1  
-freetype                  2.8                  hab7d2ae_1  
-future                    0.16.0                    <pip>
-glib                      2.53.6               h5d9569c_2  
-gst-plugins-base          1.12.4               h33fb286_0  
-gstreamer                 1.12.4               hb53b477_0  
-gym                       0.9.3                     <pip>
-heapdict                  1.0.0            py35h51e6c10_0  
-html5lib                  0.9999999                 <pip>
-icu                       58.2                 h9c2bf20_1  
-idna                      2.6                       <pip>
-imageio                   2.2.0            py35hd0a6de2_0  
-imageio                   2.2.0                     <pip>
-intel-openmp              2018.0.0             hc7b2577_8  
-jinja2                    2.10             py35h480ab6d_0  
-joblib                    0.11                      <pip>
-jpeg                      9b                   h024ee3a_2  
-libedit                   3.1                  heed3624_0  
-libffi                    3.2.1                hd88cf55_4  
-libgcc-ng                 7.2.0                h7cc24e2_2  
-libgfortran-ng            7.2.0                h9f7466a_2  
-libpng                    1.6.34               hb9fc6fc_0  
-libstdcxx-ng              7.2.0                h7a57d05_2  
-libtiff                   4.0.9                h28f6b97_0  
-libxcb                    1.12                 hcd93eb1_4  
-libxml2                   2.9.4                h2e8b1d7_6  
-locket                    0.2.0            py35h170bc82_1  
-Markdown                  2.6.11                    <pip>
-markupsafe                1.0              py35h4f4fcf6_1  
-matplotlib                2.1.2                     <pip>
-matplotlib                2.1.2            py35h0e671d2_0  
-mkl                       2018.0.1             h19d6760_4  
-mpi4py                    3.0.0                     <pip>
-msgpack-python            0.5.1            py35h6bb024c_0  
-mujoco-py                 0.5.7                     <pip>
-ncurses                   6.0                  h9df7e31_2  
-networkx                  2.1                      py35_0  
-numpy                     1.14.0                    <pip>
-numpy                     1.14.0           py35h3dfced4_1  
-olefile                   0.44             py35h2c86149_0  
-opencv-python             3.4.0.12                  <pip>
-openssl                   1.0.2n               hb7f436b_0  
-pandas                    0.22.0           py35hf484d3e_0  
-partd                     0.3.8            py35h68187f2_0  
-pcre                      8.41                 hc27e229_1  
-Pillow                    5.0.0                     <pip>
-pillow                    5.0.0            py35h3deb7b8_0  
-pip                       9.0.1            py35h7e7da9d_4  
-progressbar2              3.34.3                    <pip>
-protobuf                  3.5.1                     <pip>
-psutil                    5.4.3            py35h14c3975_0  
-pyglet                    1.3.0                     <pip>
-PyOpenGL                  3.1.0                     <pip>
-pyparsing                 2.2.0            py35h041ed72_1  
-pyparsing                 2.2.0                     <pip>
-pyqt                      5.6.0            py35h0e41ada_5  
-python                    3.5.4               h417fded_24  
-python-dateutil           2.6.1                     <pip>
-python-dateutil           2.6.1            py35h90d5b31_1  
-python-utils              2.2.0                     <pip>
-pytz                      2017.3                    <pip>
-pytz                      2017.3           py35hb13c558_0  
-pywavelets                0.5.2            py35h53ec731_0  
-pyyaml                    3.12             py35h46ef4ae_1  
-pyzmq                     16.0.3                    <pip>
-qt                        5.6.2               h974d657_12  
-readline                  7.0                  ha6073c6_4  
-requests                  2.18.4                    <pip>
-scikit-image              0.13.1           py35h14c3975_1  
-scipy                     1.0.0            py35hcbbe4a2_0  
-scipy                     1.0.0                     <pip>
-setuptools                38.4.0                   py35_0  
-setuptools                38.4.0                    <pip>
-sip                       4.18.1           py35h9eaea60_2  
-six                       1.11.0           py35h423b573_1  
-six                       1.11.0                    <pip>
-sortedcontainers          1.5.9                    py35_0  
-sqlite                    3.20.1               hb898158_2  
-tblib                     1.3.2            py35hf1eb0b4_0  
-tensorflow                1.4.1                     <pip>
-tensorflow-tensorboard    0.4.0                     <pip>
-tk                        8.6.7                hc745277_3  
-toolz                     0.9.0                    py35_0  
-tornado                   4.5.3                    py35_0  
-tqdm                      4.19.5                    <pip>
-urllib3                   1.22                      <pip>
-Werkzeug                  0.14.1                    <pip>
-wheel                     0.30.0                    <pip>
-wheel                     0.30.0           py35hd3883cf_1  
-xz                        5.2.3                h55aa19d_2  
-yaml                      0.1.7                had09818_2  
-zict                      0.1.3            py35h29275ca_0  
-zlib                      1.2.11               ha838bed_2  
-zmq                       0.0.0                     <pip>
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+@EXPLICIT
+https://repo.continuum.io/pkgs/main/linux-64/bokeh-0.12.13-py35h2f9c1c0_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/ca-certificates-2017.08.26-h1d4fec5_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/certifi-2017.11.5-py35h9749603_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/click-6.7-py35h353a69f_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/cloudpickle-0.5.2-py35hbe86bc5_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/cycler-0.10.0-py35hc4d5149_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/dask-0.16.1-py35_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/dask-core-0.16.1-py35_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/dbus-1.12.2-hd3e2b69_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/decorator-4.2.1-py35_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/distributed-1.20.2-py35_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/expat-2.2.5-he0dffb1_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/fontconfig-2.12.4-h88586e7_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/freetype-2.8-hab7d2ae_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/glib-2.53.6-h5d9569c_2.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/gst-plugins-base-1.12.4-h33fb286_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/gstreamer-1.12.4-hb53b477_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/heapdict-1.0.0-py35h51e6c10_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/icu-58.2-h9c2bf20_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/imageio-2.2.0-py35hd0a6de2_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/intel-openmp-2018.0.0-hc7b2577_8.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/jinja2-2.10-py35h480ab6d_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/jpeg-9b-h024ee3a_2.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/libedit-3.1-heed3624_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/libffi-3.2.1-hd88cf55_4.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/libgcc-ng-7.2.0-h7cc24e2_2.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/libgfortran-ng-7.2.0-h9f7466a_2.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/libpng-1.6.34-hb9fc6fc_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/libstdcxx-ng-7.2.0-h7a57d05_2.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/libtiff-4.0.9-h28f6b97_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/libxcb-1.12-hcd93eb1_4.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/libxml2-2.9.4-h2e8b1d7_6.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/locket-0.2.0-py35h170bc82_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/markupsafe-1.0-py35h4f4fcf6_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/matplotlib-2.1.2-py35h0e671d2_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/mkl-2018.0.1-h19d6760_4.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/msgpack-python-0.5.1-py35h6bb024c_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/ncurses-6.0-h9df7e31_2.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/networkx-2.1-py35_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/numpy-1.14.0-py35h3dfced4_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/olefile-0.44-py35h2c86149_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/openssl-1.0.2n-hb7f436b_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/pandas-0.22.0-py35hf484d3e_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/partd-0.3.8-py35h68187f2_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/pcre-8.41-hc27e229_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/pillow-5.0.0-py35h3deb7b8_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/pip-9.0.1-py35h7e7da9d_4.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/psutil-5.4.3-py35h14c3975_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/pyparsing-2.2.0-py35h041ed72_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/pyqt-5.6.0-py35h0e41ada_5.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/python-3.5.4-h417fded_24.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/python-dateutil-2.6.1-py35h90d5b31_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/pytz-2017.3-py35hb13c558_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/pywavelets-0.5.2-py35h53ec731_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/pyyaml-3.12-py35h46ef4ae_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/qt-5.6.2-h974d657_12.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/readline-7.0-ha6073c6_4.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/scikit-image-0.13.1-py35h14c3975_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/scipy-1.0.0-py35hcbbe4a2_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/setuptools-38.4.0-py35_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/sip-4.18.1-py35h9eaea60_2.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/six-1.11.0-py35h423b573_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/sortedcontainers-1.5.9-py35_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/sqlite-3.20.1-hb898158_2.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/tblib-1.3.2-py35hf1eb0b4_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/tk-8.6.7-hc745277_3.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/toolz-0.9.0-py35_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/tornado-4.5.3-py35_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/wheel-0.30.0-py35hd3883cf_1.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/xz-5.2.3-h55aa19d_2.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/yaml-0.1.7-had09818_2.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/zict-0.1.3-py35h29275ca_0.tar.bz2
+https://repo.continuum.io/pkgs/main/linux-64/zlib-1.2.11-ha838bed_2.tar.bz2

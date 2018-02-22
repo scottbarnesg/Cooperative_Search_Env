@@ -7,13 +7,13 @@
 #SBATCH --mail-user=scottgbarnes@gwu.edu
 
 #SBATCH -N 1
-#SBATCH -p short
+#SBATCH -p debug-cpu
 
 #SBATCH -D /home/scottgbarnes/Cooperative-Search-Gym
 #SBATCH -J mapsim
 
-#SBATCH -t 2-00:00:00
+#SBATCH -t 4:00:00
 
 module load anaconda
-source activate tf3
+source activate tensorflow
 python run_mapEnv.py
