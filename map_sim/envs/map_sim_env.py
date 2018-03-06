@@ -23,11 +23,13 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=200, interactive='True'):
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=200, interactive='False', test='True'):
+        random.seed(100)
         # Set Simulation Params
         self.gridSize = gridSize
         self.numAgents = numAgents
         self.maxSize = maxSize
+        self.test = test
         # self.action_space = (0, 1, 2, 3)
         self.action_space = spaces.Discrete(4)
         self.step_count = 0
@@ -38,7 +40,8 @@ class MapSimEnv(gym.Env):
         self.interactive = interactive
         # Generate Master Map
         self.grid = generate().world(gridSize, numObjects, maxSize)
-        self.simID = random.randint(1, 1000000)
+        # plot().showGrid(self.grid)
+        self.simID = random.randint(1000000, 2000000)
         # Single Agent (return single object)
         if numAgents == 1:
             # Generate Agents
@@ -63,7 +66,10 @@ class MapSimEnv(gym.Env):
         if self.step_count == self.term_step:
             # done = bool(1)
             done = 1
-            self._reset()
+            self.percent_explored = self.agents.percent_exp(self.gridSize)
+            print('Percent Explored: ' +str(self.agents.percent_exp(self.gridSize)) + '%')
+            if self.test == 'False':
+                self._reset()
         else:
             done = 0
             # done = bool(0)
@@ -80,6 +86,8 @@ class MapSimEnv(gym.Env):
             self.agents = agent(self.gridSize, self.grid, 1)
             # Generate Plots (should this go in _render()?)
             self.ax, self.cmap, self.fig = plot().init(self.interactive)
+            # if self.test == 'True':
+            #     plot().showGrid(self.grid)
         # Multi-Agent (returns object of objects)
         else:
             # Generate Agents
@@ -273,6 +281,17 @@ class agent:
         return self
         # Single Agent (return single object)
 
+    def percent_exp(self, gridSize):
+        count = 0
+        for i in range(gridSize[0]):
+            for j in range(gridSize[1]):
+                if self.map[i, j] != 2:
+                    count = count + 1
+
+        p_exp = 100*count/(gridSize[0]*gridSize[1])
+        return p_exp
+
+
 class plot:
     def init(self, interactive):
         if interactive == 'False':
@@ -311,13 +330,13 @@ class plot:
         return ax
 
     def showGrid(self, grid) :
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        fig1 = plt.figure(2)
+        ax1 = fig1.add_subplot(111)
         cmap = ListedColormap(['w', 'k'])
-        ax.matshow(grid, cmap=cmap)
+        ax1.matshow(grid, cmap=cmap)
         plt.draw()
-        plt.pause(1)
-        plt.close(fig)
+        plt.pause(2)
+        plt.close('all')
 
 #     def getImage(self):
 #         img = plt.savefig()

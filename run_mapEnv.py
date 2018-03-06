@@ -1,4 +1,4 @@
-import copy, os, logging
+import copy, os, logging, shutil
 from collections import deque
 
 import numpy as np
@@ -59,7 +59,7 @@ class GymVecEnv(VecEnv):
             env.env, img = env.reset()
             results.append(img)
         #results = [env.reset() for env in self.envs]
-        return np.array(results)
+        return env.env, np.array(results)
 
     @property
     def num_envs(self):
@@ -95,14 +95,12 @@ def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_a
 
     env = GymVecEnv([make_env(idx) for idx in range(num_cpu)])
     policy_fn = policy_fn_name(policy)
-    learn(policy_fn, env, seed, nstack=2, total_timesteps=int(num_timesteps * 1.1), lr=0.0005, lrschedule=lrschedule, continuous_actions=continuous_actions)
+    learn(policy_fn, env, seed, nstack=2, total_timesteps=int(num_timesteps * 1.1), lr=0.0002, lrschedule=lrschedule, continuous_actions=continuous_actions)
 
 def test(env_id, policy_name, seed, nstack=4):
-    frames_dir = 'exp_frames'
-    if os.path.exists(frames_dir):
-        raise ValueError('Frames directory already exists.')
-    os.makedirs(frames_dir)
-
+    iters = 100
+    rwd = []
+    percent_exp = []
     env = gym.make(env_id)
     env.seed(seed)
     print("logger dir: ", logger.get_dir())
@@ -139,33 +137,52 @@ def test(env_id, policy_name, seed, nstack=4):
     alpha=0.99
     continuous_actions=False
     debug=False
+    # if i == 0:
     model = Model(policy=policy_fn, ob_space=ob_space, ac_space=ac_space, nenvs=1, nsteps=nsteps, nstack=nstack, num_procs=1, ent_coef=ent_coef, vf_coef=vf_coef,
                   max_grad_norm=max_grad_norm, lr=lr, alpha=alpha, epsilon=epsilon, total_timesteps=total_timesteps, lrschedule=lrschedule, continuous_actions=continuous_actions, debug=debug)
 
-    model.load('test_model.pkl')
+
+    model.load('Feb27_test_model1.pkl')
 
     env.env, img = env.reset()
-    # ax, img = get_img(env)
-    img_hist = deque([img for _ in range(4)], maxlen=nstack)
-    action = 0
-    total_rewards = 0
-    nstack = 2
-    for tidx in range(1000):
-        if tidx % nstack == 0:
-            input_imgs = np.expand_dims(np.squeeze(np.stack(img_hist, -1)), 0)
-            actions, values, states = model.step_model.step(input_imgs)
-            action = actions[0]
-            value = values[0]
 
-        img, reward, done, _ = env.step(action)
-        total_rewards += reward
-        # img = get_img(env)
-        # img_hist.append(img)
-        imsave(os.path.join(frames_dir, 'frame_{:04d}.png'.format(tidx)), resize(img, (img_shape[0], img_shape[1], 3)))
-        print(tidx, '\tAction: ', action, '\tValues: ', value, '\tRewards: ', reward, '\tTotal rewards: ', total_rewards)#, flush=True)
-        if done:
-            print('Faultered at tidx: ', tidx)
-            break
+    for i in range(0, iters):
+        frames_dir = 'exp_frames' + str(i)
+        if os.path.exists(frames_dir):
+            # raise ValueError('Frames directory already exists.')
+            shutil.rmtree(frames_dir)
+        os.makedirs(frames_dir)
+        # ax, img = get_img(env)
+        img_hist = deque([img for _ in range(4)], maxlen=nstack)
+        action = 0
+        total_rewards = 0
+        nstack = 2
+        for tidx in range(1000):
+            if tidx % nstack == 0:
+                input_imgs = np.expand_dims(np.squeeze(np.stack(img_hist, -1)), 0)
+                actions, values, states = model.step_model.step(input_imgs)
+                action = actions[0]
+                value = values[0]
+
+            img, reward, done, _ = env.step(action)
+            total_rewards += reward
+            # img = get_img(env)
+            # img_hist.append(img)
+            imsave(os.path.join(frames_dir, 'frame_{:04d}.png'.format(tidx)), resize(img, (img_shape[0], img_shape[1], 3)))
+            print(tidx, '\tAction: ', action, '\tValues: ', value, '\tRewards: ', reward, '\tTotal rewards: ', total_rewards)#, flush=True)
+            if done:
+                print('Faultered at tidx: ', tidx)
+                rwd.append(total_rewards)
+                percent_exp.append(env.env.percent_explored)
+                env.env, img = env.reset()
+                break
+
+    avg_rwd = sum(rwd)/iters
+    avg_pct_exp = sum(percent_exp)/iters
+    print('Average Reward: ')
+    print(avg_rwd)
+    print('Average Percent Explored: ')
+    print(avg_pct_exp)
 
 if __name__ == '__main__':
     import argparse
