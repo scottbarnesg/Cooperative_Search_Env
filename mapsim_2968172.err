@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "run_mapEnv.py", line 7, in <module>
-    import tensorflow as tf
-ImportError: No module named tensorflow
