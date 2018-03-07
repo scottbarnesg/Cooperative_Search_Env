@@ -23,8 +23,8 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=200, interactive='False', test='True'):
-        random.seed(100)
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=200, interactive='False', test='False'):
+        # random.seed(100)
         # Set Simulation Params
         self.gridSize = gridSize
         self.numAgents = numAgents
@@ -102,12 +102,12 @@ class MapSimEnv(gym.Env):
     def get_image(self):
         self.ax = plot().update(self.ax, self.cmap, self.agents.map, self.interactive)
         img = self.render_img()
-        img_shape = (100, 100, 1)
+        img_shape = (84, 84, 3)
         img = self.process_img(img, img_shape)
         return self.ax, img
 
     def process_img(self, img, img_shape):
-        img = rgb2grey(img)
+        # img = rgb2grey(img)
         img = resize(img, img_shape)
         return img
 

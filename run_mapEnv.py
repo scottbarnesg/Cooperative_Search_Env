@@ -7,6 +7,7 @@ from skimage.transform import resize
 import tensorflow as tf
 
 from scipy.misc import imsave
+from matplotlib import pyplot as plt
 
 from baselines import logger
 from baselines.common import set_global_seeds
@@ -28,8 +29,8 @@ class GymVecEnv(VecEnv):
         self.remotes = [0]*len(env_fns)
         env = self.envs[0]
         self.action_space = env.action_space
-        img_shape = (100, 100, 1)
-        self.observation_space = spaces.Box(low=0, high=255, shape=img_shape)
+        img_shape = (84, 84, 3)
+        self.observation_space = spaces.Box(low=0, high=256, shape=img_shape)
         self.ts = np.zeros(len(self.envs), dtype='int')
 
     def step(self, action_n):
@@ -40,6 +41,9 @@ class GymVecEnv(VecEnv):
         imgs = []
         for (a,env) in zip(action_n, self.envs):
             ob, rew, done, info = env.step(a)
+            # plt.imshow(ob)
+            # plt.draw()
+            # plt.pause(0.000001)
             # Need to fix below. What is the difference between obs and imgs?
             obs.append(ob)
             rews.append(rew)
@@ -95,7 +99,7 @@ def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_a
 
     env = GymVecEnv([make_env(idx) for idx in range(num_cpu)])
     policy_fn = policy_fn_name(policy)
-    learn(policy_fn, env, seed, nstack=2, total_timesteps=int(num_timesteps * 1.1), lr=0.0002, lrschedule=lrschedule, continuous_actions=continuous_actions)
+    learn(policy_fn, env, seed, nstack=2, total_timesteps=int(num_timesteps * 1.1), lr=0.001, lrschedule=lrschedule, continuous_actions=continuous_actions)
 
 def test(env_id, policy_name, seed, nstack=4):
     iters = 100
@@ -111,7 +115,7 @@ def test(env_id, policy_name, seed, nstack=4):
         else:
             env.action_space.n = 10
     gym.logger.setLevel(logging.WARN)
-    img_shape = (100, 100, 1)
+    img_shape = (84, 84, 3)
     ob_space = spaces.Box(low=0, high=255, shape=img_shape)
     ac_space = env.action_space
 
@@ -142,11 +146,13 @@ def test(env_id, policy_name, seed, nstack=4):
                   max_grad_norm=max_grad_norm, lr=lr, alpha=alpha, epsilon=epsilon, total_timesteps=total_timesteps, lrschedule=lrschedule, continuous_actions=continuous_actions, debug=debug)
 
 
-    model.load('Feb27_test_model1.pkl')
+    model.load('test_model.pkl')
 
     env.env, img = env.reset()
 
     for i in range(0, iters):
+        if i % 10 == 0:
+            print('Iteration: ' + str(i))
         frames_dir = 'exp_frames' + str(i)
         if os.path.exists(frames_dir):
             # raise ValueError('Frames directory already exists.')
@@ -160,16 +166,21 @@ def test(env_id, policy_name, seed, nstack=4):
         for tidx in range(1000):
             if tidx % nstack == 0:
                 input_imgs = np.expand_dims(np.squeeze(np.stack(img_hist, -1)), 0)
-                actions, values, states = model.step_model.step(input_imgs)
+                print(np.shape(input_imgs))
+                plt.imshow(input_imgs[0, :, :, :, 1])
+                plt.draw()
+                plt.pause(0.000001)
+                actions, values, states = model.step_model.step(input_imgs.reshape([1, 84, 84, 6]))
                 action = actions[0]
                 value = values[0]
+                print('Value: ', value)
 
             img, reward, done, _ = env.step(action)
             total_rewards += reward
             # img = get_img(env)
-            # img_hist.append(img)
+            img_hist.append(img)
             imsave(os.path.join(frames_dir, 'frame_{:04d}.png'.format(tidx)), resize(img, (img_shape[0], img_shape[1], 3)))
-            print(tidx, '\tAction: ', action, '\tValues: ', value, '\tRewards: ', reward, '\tTotal rewards: ', total_rewards)#, flush=True)
+            # print(tidx, '\tAction: ', action, '\tValues: ', value, '\tRewards: ', reward, '\tTotal rewards: ', total_rewards)#, flush=True)
             if done:
                 print('Faultered at tidx: ', tidx)
                 rwd.append(total_rewards)
