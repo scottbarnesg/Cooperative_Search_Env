@@ -8,6 +8,7 @@ import tensorflow as tf
 
 from scipy.misc import imsave
 from matplotlib import pyplot as plt
+import statistics
 
 from baselines import logger
 from baselines.common import set_global_seeds
@@ -25,12 +26,13 @@ from gym.envs import map_sim
 class GymVecEnv(VecEnv):
     def __init__(self, env_fns):
         self.envs = [fn() for fn in env_fns]
-        print(self.envs)
+        print('---------------------------------------------')
+        print('Environment "mapSim-v1" Successfully Initialized')
         self.remotes = [0]*len(env_fns)
         env = self.envs[0]
         self.action_space = env.action_space
         img_shape = (84, 84, 3)
-        self.observation_space = spaces.Box(low=0, high=256, shape=img_shape)
+        self.observation_space = spaces.Box(low=0, high=255, shape=img_shape)
         self.ts = np.zeros(len(self.envs), dtype='int')
 
     def step(self, action_n):
@@ -86,7 +88,7 @@ def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_a
             env = gym.make(env_id)
             env.seed(seed+rank)
             env.ID = rank
-            print("logger dir: ", logger.get_dir())
+            # print("logger dir: ", logger.get_dir())
             env = bench.Monitor(env, logger.get_dir() and os.path.join(logger.get_dir(), str(rank)))
             if env_id == 'Pendulum-v0':
                 if continuous_actions:
@@ -99,7 +101,7 @@ def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_a
 
     env = GymVecEnv([make_env(idx) for idx in range(num_cpu)])
     policy_fn = policy_fn_name(policy)
-    learn(policy_fn, env, seed, nstack=2, total_timesteps=int(num_timesteps * 1.1), lr=0.001, lrschedule=lrschedule, continuous_actions=continuous_actions)
+    learn(policy_fn, env, seed, nsteps=10, nstack=1, total_timesteps=int(num_timesteps * 1.1), lr=7e-4, lrschedule=lrschedule, continuous_actions=continuous_actions)
 
 def test(env_id, policy_name, seed, nstack=4):
     iters = 100
@@ -115,6 +117,7 @@ def test(env_id, policy_name, seed, nstack=4):
         else:
             env.action_space.n = 10
     gym.logger.setLevel(logging.WARN)
+    # img_shape = (84, 84, 3)
     img_shape = (84, 84, 3)
     ob_space = spaces.Box(low=0, high=255, shape=img_shape)
     ac_space = env.action_space
@@ -145,15 +148,25 @@ def test(env_id, policy_name, seed, nstack=4):
     model = Model(policy=policy_fn, ob_space=ob_space, ac_space=ac_space, nenvs=1, nsteps=nsteps, nstack=nstack, num_procs=1, ent_coef=ent_coef, vf_coef=vf_coef,
                   max_grad_norm=max_grad_norm, lr=lr, alpha=alpha, epsilon=epsilon, total_timesteps=total_timesteps, lrschedule=lrschedule, continuous_actions=continuous_actions, debug=debug)
 
-
-    model.load('test_model.pkl')
+    m_name = 'test_model_Mar7_1mil.pkl'
+    model.load(m_name)
 
     env.env, img = env.reset()
-
-    for i in range(0, iters):
+    print('---------------------------------------------')
+    print("Initializing Test for: ", m_name)
+    print('---------------------------------------------')
+    for i in range(1, iters+1):
         if i % 10 == 0:
-            print('Iteration: ' + str(i))
-        frames_dir = 'exp_frames' + str(i)
+            print('-----------------------------------')
+            print('Iteration: ', i)
+            avg_rwd = sum(rwd)/i
+            avg_pct_exp = sum(percent_exp)/i
+            med_pct_exp = statistics.median(percent_exp)
+            print('Average Reward: ', avg_rwd)
+            print('Average Percent Explored: ', avg_pct_exp, '%')
+            print('Median Percent Explored: ', med_pct_exp)
+            print('-----------------------------------')
+        frames_dir = 'exp_frames' + str(i+100)
         if os.path.exists(frames_dir):
             # raise ValueError('Frames directory already exists.')
             shutil.rmtree(frames_dir)
@@ -164,16 +177,22 @@ def test(env_id, policy_name, seed, nstack=4):
         total_rewards = 0
         nstack = 2
         for tidx in range(1000):
-            if tidx % nstack == 0:
+            # if tidx % nstack == 0:
+            if tidx > 0:
                 input_imgs = np.expand_dims(np.squeeze(np.stack(img_hist, -1)), 0)
-                print(np.shape(input_imgs))
-                plt.imshow(input_imgs[0, :, :, :, 1])
-                plt.draw()
-                plt.pause(0.000001)
-                actions, values, states = model.step_model.step(input_imgs.reshape([1, 84, 84, 6]))
+                # print(np.shape(input_imgs))
+                # plt.imshow(input_imgs[0, :, :, 0])
+                # plt.imshow(input_imgs[0, :, :, 1])
+                # plt.draw()
+                # plt.pause(0.000001)
+                if input_imgs.shape == (1, 84, 84, 3):
+                    actions, values, states = model.step_model.step(input_imgs)
+                else:
+                    actions, values, states = model.step_model.step(input_imgs[:, :, :, :, 0])
+                # actions, values, states = model.step_model.step(input_imgs)
                 action = actions[0]
                 value = values[0]
-                print('Value: ', value)
+                # print('Value: ', value, '   Action: ', action)
 
             img, reward, done, _ = env.step(action)
             total_rewards += reward
@@ -182,18 +201,21 @@ def test(env_id, policy_name, seed, nstack=4):
             imsave(os.path.join(frames_dir, 'frame_{:04d}.png'.format(tidx)), resize(img, (img_shape[0], img_shape[1], 3)))
             # print(tidx, '\tAction: ', action, '\tValues: ', value, '\tRewards: ', reward, '\tTotal rewards: ', total_rewards)#, flush=True)
             if done:
-                print('Faultered at tidx: ', tidx)
+                # print('Faultered at tidx: ', tidx)
                 rwd.append(total_rewards)
                 percent_exp.append(env.env.percent_explored)
                 env.env, img = env.reset()
                 break
 
+    print('-----------------------------------')
+    print('Iteration: ', iters)
     avg_rwd = sum(rwd)/iters
     avg_pct_exp = sum(percent_exp)/iters
-    print('Average Reward: ')
-    print(avg_rwd)
-    print('Average Percent Explored: ')
-    print(avg_pct_exp)
+    med_pct_exp = statistics.median(percent_exp)
+    print('Average Reward: ', avg_rwd)
+    print('Average Percent Explored: ', avg_pct_exp, '%')
+    print('Median Percent Explored: ', med_pct_exp)
+    print('-----------------------------------')
 
 if __name__ == '__main__':
     import argparse
@@ -218,7 +240,7 @@ if __name__ == '__main__':
 
 
     if args.test:
-        test(args.env, args.policy, args.seed, nstack=2)
+        test(args.env, args.policy, args.seed, nstack=1)
     else:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
               policy=args.policy, lrschedule=args.lrschedule, num_cpu=8, continuous_actions=continuous_actions)

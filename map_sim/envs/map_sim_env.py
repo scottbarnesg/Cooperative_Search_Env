@@ -8,7 +8,8 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from scipy import misc
 from skimage.color import rgb2grey
-from skimage.transform import resize
+# from skimage.transform import resize
+from PIL import Image
 # import matplotlib
 # matplotlib.use('gtkagg')
 
@@ -23,8 +24,8 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=10, numAgents=1, maxIters=200, interactive='False', test='False'):
-        # random.seed(100)
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=8, numAgents=1, maxIters=300, interactive='False', test='True'):
+        random.seed(500) # TESTING SEED - Do Not Seed During Training
         # Set Simulation Params
         self.gridSize = gridSize
         self.numAgents = numAgents
@@ -41,7 +42,7 @@ class MapSimEnv(gym.Env):
         # Generate Master Map
         self.grid = generate().world(gridSize, numObjects, maxSize)
         # plot().showGrid(self.grid)
-        self.simID = random.randint(1000000, 2000000)
+        self.simID = random.randint(2000000, 3000000)
         # Single Agent (return single object)
         if numAgents == 1:
             # Generate Agents
@@ -55,7 +56,7 @@ class MapSimEnv(gym.Env):
             # Generate Plots (should this go in _render()?)
             self.ax, self.cmap = plot().multiInit(numAgents)
 
-        print('Environment "mapSim-v1" Successfully Initialized')
+        # print('Environment "mapSim-v1" Successfully Initialized')
 
 
     def _step(self, action):
@@ -104,17 +105,20 @@ class MapSimEnv(gym.Env):
         img = self.render_img()
         img_shape = (84, 84, 3)
         img = self.process_img(img, img_shape)
+        img = np.asarray(img.convert('RGB'))
         return self.ax, img
 
     def process_img(self, img, img_shape):
         # img = rgb2grey(img)
-        img = resize(img, img_shape)
+        # img = resize(img, img_shape, order=3, preserve_range=False, clip=True)
+        img = img.resize(img_shape[0:2])
         return img
 
     def render_img(self):
         filename = 'img' + str(self.simID) + '.png'
         self.fig.savefig(filename, bbox_inches='tight')
-        img = misc.imread(filename)
+        # img = misc.imread(filename)
+        img = Image.open(filename)
         # canvas = FigureCanvas(self.fig)
         # canvas.draw()
         # img = np.fromstring(canvas.tostring_rgb(), dtype='uint8')
@@ -273,11 +277,11 @@ class agent:
     def get_reward(self, gridSize):
         #r = sum(abs(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[0].map)+sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[1].map)))/(gridSize[0]*gridSize[1]*4)
         # r_current = float(sum(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-self.map))/[gridSize[0]*gridSize[1]*2])
-        r_current = float(sum(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-self.map))/16)
+        r_current = float(sum(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-self.map))/14)
         self.reward = r_current-self.r_old-0.1
         self.r_old = r_current
         if self.valid == 'false':
-            self.reward -= 0.9
+            self.reward -= 0.4
         return self
         # Single Agent (return single object)
 
