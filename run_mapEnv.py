@@ -41,8 +41,10 @@ class GymVecEnv(VecEnv):
         dones = []
         infos = []
         imgs = []
+        print('action_n = ' + str(action_n))
         for (a,env) in zip(action_n, self.envs):
-            ob, rew, done, info = env.step(a)
+            print('a= '+str(a))
+            ob, rew, done, info = env.step(action_n) # MAY NOT BE CORRECT 
             # plt.imshow(ob)
             # plt.draw()
             # plt.pause(0.000001)
@@ -82,7 +84,7 @@ def policy_fn_name(policy_name):
         policy_fn = MlpPolicy
     return policy_fn
 
-def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_actions=False):
+def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_actions=False, numAgents=2):
     def make_env(rank):
         def _thunk():
             env = gym.make(env_id)
@@ -101,9 +103,9 @@ def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_a
 
     env = GymVecEnv([make_env(idx) for idx in range(num_cpu)])
     policy_fn = policy_fn_name(policy)
-    learn(policy_fn, env, seed, nsteps=10, nstack=1, total_timesteps=int(num_timesteps * 1.1), lr=7e-4, lrschedule=lrschedule, continuous_actions=continuous_actions)
+    learn(policy_fn, env, seed, nsteps=10, nstack=1, total_timesteps=int(num_timesteps * 1.1), lr=7e-4, lrschedule=lrschedule, continuous_actions=continuous_actions, numAgents=numAgents, continueTraining=False)
 
-def test(env_id, policy_name, seed, nstack=4):
+def test(env_id, policy_name, seed, nstack=1):
     iters = 100
     rwd = []
     percent_exp = []
@@ -228,6 +230,7 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--continuous_actions', default=False, action='store_true')
     parser.add_argument('--test', default=False, action='store_true')
     parser.add_argument('--interactive', default=False, action='store_true')
+    # parser.add_argument('--multiAgent', default=False, action='store_true')
     args = parser.parse_args()
     logger.configure()
 
@@ -237,10 +240,10 @@ if __name__ == '__main__':
     else:
     '''
     continuous_actions = False
-
+    numAgents = 2
 
     if args.test:
         test(args.env, args.policy, args.seed, nstack=1)
     else:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-              policy=args.policy, lrschedule=args.lrschedule, num_cpu=8, continuous_actions=continuous_actions)
+              policy=args.policy, lrschedule=args.lrschedule, num_cpu=2, continuous_actions=continuous_actions, numAgents=numAgents)

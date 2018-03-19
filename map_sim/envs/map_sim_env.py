@@ -24,8 +24,8 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=8, numAgents=1, maxIters=300, interactive='False', test='True'):
-        random.seed(500) # TESTING SEED - Do Not Seed During Training
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=8, numAgents=2, maxIters=300, interactive='False', test='True'):
+        # random.seed(500) # TESTING SEED - Do Not Seed During Training
         # Set Simulation Params
         self.gridSize = gridSize
         self.numAgents = numAgents
@@ -52,23 +52,37 @@ class MapSimEnv(gym.Env):
         # Multi-Agent (returns object of objects)
         else:
             # Generate Agents
-            self.agents = [agent(gridSize, i) for i in range(numAgents)]
+            self.agents = [agent(gridSize, self.grid, i) for i in range(numAgents)]
+            print(self.agents)
             # Generate Plots (should this go in _render()?)
-            self.ax, self.cmap = plot().multiInit(numAgents)
+            self.fig, self.ax, self.cmap = plot().multiInit(numAgents, self.interactive)
 
         # print('Environment "mapSim-v1" Successfully Initialized')
 
 
     def _step(self, action):
         self.step_count += 1
-        self.agents = self.agents.update_position(action, self.grid)
-        self.agents = self.agents.get_reward(self.gridSize)
-        self.ax, img = self.get_image()
+        if self.numAgents == 1:
+            self.agents = self.agents.update_position(action, self.grid)
+            self.agents = self.agents.get_reward(self.gridSize)
+            self.ax, img = self.get_image()
+        else:
+            for i in range(self.numAgents):
+                print('action= '+ str(action))
+                print('agents= ' + str(self.agents))
+                self.agents[i] = self.agents[i].update_position(action[i], self.grid)
+                self.agents[i] = self.agents[i].get_reward(self.gridSize)
+                self.ax[i], img[i] = self.get_image()
+
         if self.step_count == self.term_step:
-            # done = bool(1)
             done = 1
-            self.percent_explored = self.agents.percent_exp(self.gridSize)
-            print('Percent Explored: ' +str(self.agents.percent_exp(self.gridSize)) + '%')
+            if self.numAgents == 1:
+                self.percent_explored = self.agents.percent_exp(self.gridSize)
+                print('Percent Explored: ' + str(self.agents.percent_exp(self.gridSize)) + '%')
+            else:
+                for i in range(self.numAgents):
+                    self.percent_explored = self.agents[i].percent_exp(self.gridSize)
+                    print('Agent ' + str(i) + ' | ' + 'Percent Explored: ' + str(self.agents.percent_exp(self.gridSize)) + '%')
             if self.test == 'False':
                 self._reset()
         else:
@@ -80,7 +94,8 @@ class MapSimEnv(gym.Env):
         self.reward = 0
         self.step_count = 0
         # self.term_step = random.randint(self.maxIters/10, self.maxIters)
-        plt.close(self.fig)
+        plt.close('all') # OK for A2C. Will have to change for A3C
+        # plt.close(self.fig)
         self.grid = generate().world(self.gridSize, self.numObjects, self.maxSize)
         if self.numAgents == 1:
             # Generate Agents
@@ -92,20 +107,32 @@ class MapSimEnv(gym.Env):
         # Multi-Agent (returns object of objects)
         else:
             # Generate Agents
-            self.agents = [agent(self.gridSize, i) for i in range(self.numAgents)]
+            self.agents = [agent(self.gridSize, self.grid, i) for i in range(self.numAgents)]
             # Generate Plots (should this go in _render()?)
-            self.ax, self.cmap = plot().multiInit(self.numAgents)
+            self.fig, self.ax, self.cmap = plot().multiInit(self.numAgents, self.interactive)
 
         self.ax, img = self.get_image()
 
         return self, img
 
-    def get_image(self):
-        self.ax = plot().update(self.ax, self.cmap, self.agents.map, self.interactive)
-        img = self.render_img()
+    def get_image(self): # Needs updating
         img_shape = (84, 84, 3)
-        img = self.process_img(img, img_shape)
-        img = np.asarray(img.convert('RGB'))
+        if self.numAgents == 1:
+            self.ax = plot().update(self.ax, self.cmap, self.agents.map, self.interactive)
+            img = self.render_img()
+            img = self.process_img(img, img_shape)
+            img = np.asarray(img.convert('RGB'))
+        else:
+            self.ax = plot().multiUpdate(self.ax, self.cmap, self.agents, self.numAgents, self.interactive)
+            for i in range(self.numAgents):
+                self.agents[i].img = self.render_img(agent_ID=i)
+                self.agents[i].img = self.process_img(self.agents[i].img, img_shape)
+                self.agents[i].img = np.asarray(self.agents[i].img.convert('RGB'))
+
+            img = []
+            for i in range(self.numAgents):
+                img.append(self.agents[i].img)
+
         return self.ax, img
 
     def process_img(self, img, img_shape):
@@ -114,11 +141,16 @@ class MapSimEnv(gym.Env):
         img = img.resize(img_shape[0:2])
         return img
 
-    def render_img(self):
-        filename = 'img' + str(self.simID) + '.png'
-        self.fig.savefig(filename, bbox_inches='tight')
-        # img = misc.imread(filename)
-        img = Image.open(filename)
+    def render_img(self, agent_ID=1):
+        if self.numAgents == 1:
+            filename = 'img' + str(self.simID) + '.png'
+            self.fig.savefig(filename, bbox_inches='tight')
+            # img = misc.imread(filename)
+            img = Image.open(filename)
+        else:
+            filename = 'img' + str(self.simID) + str(agent_ID) + '.png'
+            self.fig[agent_ID].savefig(filename, bbox_inches='tight')
+            img = Image.open(filename)
         # canvas = FigureCanvas(self.fig)
         # canvas.draw()
         # img = np.fromstring(canvas.tostring_rgb(), dtype='uint8')
@@ -174,6 +206,7 @@ class agent:
         self.reward = 0
         self.r_old = 0
         self.gridSize = gridSize
+        self.img= []
 
     def init_location(self, gridSize, grid):
         valid = 'false'
@@ -307,15 +340,20 @@ class plot:
         cmap = ListedColormap(['w', 'b', 'k', 'r'])
         return ax, cmap, fig
 
-    def multiInit(self, numAgents):
-        plt.ion()
-        fig = plt.figure()
-        ax1 = fig.add_subplot(2, 1, 1)
-        ax2 = fig.add_subplot(2, 1, 2)
+    def multiInit(self, numAgents, interactive):
+        if interactive == 'False':
+            plt.ioff()
+        else:
+            plt.ion()
+        fig1 = plt.figure()
+        fig2 = plt.figure()
+        fig = (fig1, fig2)
+        ax1 = fig1.add_subplot(2, 1, 1)
+        ax2 = fig2.add_subplot(2, 1, 2)
         ax = (ax1, ax2)
         cmap = ListedColormap(['w', 'b', 'k', 'r'])
 
-        return ax, cmap
+        return fig, ax, cmap
 
     def update(self, ax, cmap, grid, interactive):
         ax.cla()
@@ -325,12 +363,13 @@ class plot:
             plt.pause(0.00000001)
         return ax
 
-    def multiUpdate(self, ax, cmap, agents, numAgents, fig):
+    def multiUpdate(self, ax, cmap, agents, numAgents, interactive):
         for i in range(numAgents):
+            ax[i].cla()
             ax[i].matshow(agents[i].map, cmap=cmap)
+        if interactive == 'True':
             plt.draw()
-        plt.pause(0.00000001)
-        # plt.cla()
+            plt.pause(0.00000001)
         return ax
 
     def showGrid(self, grid) :
