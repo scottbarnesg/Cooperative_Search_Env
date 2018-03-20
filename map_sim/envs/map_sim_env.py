@@ -1,4 +1,6 @@
 # Base Simulation
+# import matplotlib
+# matplotlib.use('gtkagg')
 import numpy as np
 import numpy.matlib
 import random
@@ -10,8 +12,8 @@ from scipy import misc
 from skimage.color import rgb2grey
 # from skimage.transform import resize
 from PIL import Image
-# import matplotlib
-# matplotlib.use('gtkagg')
+import matplotlib
+matplotlib.use('gtkagg')
 
 # OpenAI Utils
 import gym
@@ -65,14 +67,19 @@ class MapSimEnv(gym.Env):
         if self.numAgents == 1:
             self.agents = self.agents.update_position(action, self.grid)
             self.agents = self.agents.get_reward(self.gridSize)
+            reward = self.agents.reward
             self.ax, img = self.get_image()
         else:
+            img = []
+            reward = []
             for i in range(self.numAgents):
                 print('action= '+ str(action))
                 print('agents= ' + str(self.agents))
                 self.agents[i] = self.agents[i].update_position(action[i], self.grid)
                 self.agents[i] = self.agents[i].get_reward(self.gridSize)
-                self.ax[i], img[i] = self.get_image()
+                reward.append(self.agents[i].reward)
+                self.ax, img_ = self.get_image()
+                img.append(img_)
 
         if self.step_count == self.term_step:
             done = 1
@@ -88,7 +95,11 @@ class MapSimEnv(gym.Env):
         else:
             done = 0
             # done = bool(0)
-        return img, self.agents.reward, done, {}
+
+        print('env obs')
+        print(np.asarray(img).shape)
+
+        return img, reward, done, {}
 
     def _reset(self):
         self.reward = 0
@@ -132,7 +143,6 @@ class MapSimEnv(gym.Env):
             img = []
             for i in range(self.numAgents):
                 img.append(self.agents[i].img)
-
         return self.ax, img
 
     def process_img(self, img, img_shape):
@@ -348,8 +358,8 @@ class plot:
         fig1 = plt.figure()
         fig2 = plt.figure()
         fig = (fig1, fig2)
-        ax1 = fig1.add_subplot(2, 1, 1)
-        ax2 = fig2.add_subplot(2, 1, 2)
+        ax1 = fig1.add_subplot(1, 1, 1)
+        ax2 = fig2.add_subplot(1, 1, 1)
         ax = (ax1, ax2)
         cmap = ListedColormap(['w', 'b', 'k', 'r'])
 
