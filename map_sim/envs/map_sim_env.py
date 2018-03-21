@@ -14,6 +14,7 @@ from skimage.color import rgb2grey
 from PIL import Image
 import matplotlib
 matplotlib.use('gtkagg')
+import time
 
 # OpenAI Utils
 import gym
@@ -26,7 +27,7 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=8, numAgents=2, maxIters=300, interactive='False', test='True'):
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=8, numAgents=2, maxIters=30, interactive='False', test='False'):
         # random.seed(500) # TESTING SEED - Do Not Seed During Training
         # Set Simulation Params
         self.gridSize = gridSize
@@ -62,7 +63,7 @@ class MapSimEnv(gym.Env):
         # print('Environment "mapSim-v1" Successfully Initialized')
 
 
-    def _step(self, action):
+    def _step(self, action, ind):
         self.step_count += 1
         if self.numAgents == 1:
             self.agents = self.agents.update_position(action, self.grid)
@@ -70,17 +71,21 @@ class MapSimEnv(gym.Env):
             reward = self.agents.reward
             self.ax, img = self.get_image()
         else:
-            img = []
-            reward = []
-            for i in range(self.numAgents):
-                print('action= '+ str(action))
-                print('agents= ' + str(self.agents))
-                self.agents[i] = self.agents[i].update_position(action[i], self.grid)
-                self.agents[i] = self.agents[i].get_reward(self.gridSize)
-                reward.append(self.agents[i].reward)
-                self.ax, img_ = self.get_image()
-                img.append(img_)
-
+            self.agents[ind] = self.agents[ind].update_position(action, self.grid)
+            self.agents[ind] = self.agents[ind].get_reward(self.gridSize)
+            reward = self.agents[ind].reward
+            self.ax, img = self.get_image()
+            # img = []
+            # reward = []
+            # for i in range(self.numAgents):
+                # print('action= '+ str(action))
+                # print('agents= ' + str(self.agents))
+                # self.agents[i] = self.agents[i].update_position(action[i], self.grid)
+                # self.agents[i] = self.agents[i].get_reward(self.gridSize)
+                # reward.append(self.agents[i].reward)
+                # self.ax, img_ = self.get_image()
+                # img.append(img_)
+        print(self.step_count)
         if self.step_count == self.term_step:
             done = 1
             if self.numAgents == 1:
@@ -89,7 +94,7 @@ class MapSimEnv(gym.Env):
             else:
                 for i in range(self.numAgents):
                     self.percent_explored = self.agents[i].percent_exp(self.gridSize)
-                    print('Agent ' + str(i) + ' | ' + 'Percent Explored: ' + str(self.agents.percent_exp(self.gridSize)) + '%')
+                    print('Agent ' + str(i) + ' | ' + 'Percent Explored: ' + str(self.agents[i].percent_exp(self.gridSize)) + '%')
             if self.test == 'False':
                 self._reset()
         else:
@@ -98,7 +103,8 @@ class MapSimEnv(gym.Env):
 
         print('env obs')
         print(np.asarray(img).shape)
-
+        print('env reward')
+        print(reward)
         return img, reward, done, {}
 
     def _reset(self):

@@ -35,7 +35,7 @@ class GymVecEnv(VecEnv):
         self.observation_space = spaces.Box(low=0, high=255, shape=img_shape)
         self.ts = np.zeros(len(self.envs), dtype='int')
 
-    def step(self, action_n):
+    def step(self, action_n, ind=0):
         obs = []
         rews = []
         dones = []
@@ -43,7 +43,7 @@ class GymVecEnv(VecEnv):
         imgs = []
         print('action_n = ' + str(action_n))
         for (a,env) in zip(action_n, self.envs):
-            ob, rew, done, info = env.step(action_n) # MAY NOT BE CORRECT
+            ob, rew, done, info = env.step(action_n[ind], ind) # MAY NOT BE CORRECT
             # plt.imshow(ob)
             # plt.draw()
             # plt.pause(0.000001)
@@ -55,8 +55,13 @@ class GymVecEnv(VecEnv):
             imgs.append(ob)
         self.ts += 1
         for (i, done) in enumerate(dones):
+            print ('Debug')
+            print('dones ' + str(dones))
+            print('envs' + str(self.envs))
+            print()
             if done:
-                obs[i] = self.envs[i].reset()
+                print (i)
+                # obs[i] = self.envs[i].reset()
                 self.ts[i] = 0
         return np.array(imgs), np.array(rews), np.array(dones), infos
 
