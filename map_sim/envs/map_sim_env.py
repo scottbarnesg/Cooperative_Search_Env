@@ -12,8 +12,8 @@ from scipy import misc
 from skimage.color import rgb2grey
 # from skimage.transform import resize
 from PIL import Image
-import matplotlib
-matplotlib.use('gtkagg')
+# import matplotlib
+# matplotlib.use('gtkagg')
 import time
 
 # OpenAI Utils
@@ -27,7 +27,7 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=8, numAgents=2, maxIters=30, interactive='False', test='False'):
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=8, numAgents=2, maxIters=150, interactive='False', test='False'):
         # random.seed(500) # TESTING SEED - Do Not Seed During Training
         # Set Simulation Params
         self.gridSize = gridSize
@@ -85,7 +85,7 @@ class MapSimEnv(gym.Env):
                 # reward.append(self.agents[i].reward)
                 # self.ax, img_ = self.get_image()
                 # img.append(img_)
-        print(self.step_count)
+        # print(self.step_count)
         if self.step_count == self.term_step:
             done = 1
             if self.numAgents == 1:
@@ -94,17 +94,18 @@ class MapSimEnv(gym.Env):
             else:
                 for i in range(self.numAgents):
                     self.percent_explored = self.agents[i].percent_exp(self.gridSize)
-                    print('Agent ' + str(i) + ' | ' + 'Percent Explored: ' + str(self.agents[i].percent_exp(self.gridSize)) + '%')
+                    if self.interactive == 'True':
+                        print('Agent ' + str(i) + ' | ' + 'Percent Explored: ' + str(self.agents[i].percent_exp(self.gridSize)) + '%')
             if self.test == 'False':
                 self._reset()
         else:
             done = 0
             # done = bool(0)
 
-        print('env obs')
-        print(np.asarray(img).shape)
-        print('env reward')
-        print(reward)
+        # print('env obs')
+        # print(np.asarray(img).shape)
+        # print('env reward')
+        # print(reward)
         return img, reward, done, {}
 
     def _reset(self):

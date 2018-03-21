@@ -41,7 +41,7 @@ class GymVecEnv(VecEnv):
         dones = []
         infos = []
         imgs = []
-        print('action_n = ' + str(action_n))
+        # print('action_n = ' + str(action_n))
         for (a,env) in zip(action_n, self.envs):
             ob, rew, done, info = env.step(action_n[ind], ind) # MAY NOT BE CORRECT
             # plt.imshow(ob)
@@ -55,12 +55,12 @@ class GymVecEnv(VecEnv):
             imgs.append(ob)
         self.ts += 1
         for (i, done) in enumerate(dones):
-            print ('Debug')
-            print('dones ' + str(dones))
-            print('envs' + str(self.envs))
-            print()
+            # print ('Debug')
+            # print('dones ' + str(dones))
+            # print('envs' + str(self.envs))
+            # print()
             if done:
-                print (i)
+                # print (i)
                 # obs[i] = self.envs[i].reset()
                 self.ts[i] = 0
         return np.array(imgs), np.array(rews), np.array(dones), infos
@@ -107,7 +107,7 @@ def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_a
 
     env = GymVecEnv([make_env(idx) for idx in range(num_cpu)])
     policy_fn = policy_fn_name(policy)
-    learn(policy_fn, env, seed, nsteps=10, nstack=1, total_timesteps=int(num_timesteps * 1.1), lr=7e-4, lrschedule=lrschedule, continuous_actions=continuous_actions, numAgents=numAgents, continueTraining=False)
+    learn(policy_fn, env, seed, nsteps=30, nstack=1, total_timesteps=int(num_timesteps * 1.1), lr=7e-4, lrschedule=lrschedule, continuous_actions=continuous_actions, numAgents=numAgents, continueTraining=False, debug=False)
 
 def test(env_id, policy_name, seed, nstack=1):
     iters = 100
@@ -250,4 +250,4 @@ if __name__ == '__main__':
         test(args.env, args.policy, args.seed, nstack=1)
     else:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-              policy=args.policy, lrschedule=args.lrschedule, num_cpu=2, continuous_actions=continuous_actions, numAgents=numAgents)
+              policy=args.policy, lrschedule=args.lrschedule, num_cpu=4, continuous_actions=continuous_actions, numAgents=numAgents)
