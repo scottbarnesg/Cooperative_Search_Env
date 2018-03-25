@@ -27,7 +27,7 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=8, numAgents=2, maxIters=150, interactive='False', test='False'):
+    def __init__(self, gridSize=[7, 7], numObjects=0, maxSize=8, numAgents=2, maxIters=15, interactive='False', test='False'):
         # random.seed(500) # TESTING SEED - Do Not Seed During Training
         # Set Simulation Params
         self.gridSize = gridSize
@@ -45,7 +45,7 @@ class MapSimEnv(gym.Env):
         # Generate Master Map
         self.grid = generate().world(gridSize, numObjects, maxSize)
         # plot().showGrid(self.grid)
-        self.simID = random.randint(2000000, 3000000)
+        self.simID = random.randint(1000000, 2000000)
         # Single Agent (return single object)
         if numAgents == 1:
             # Generate Agents
@@ -55,10 +55,14 @@ class MapSimEnv(gym.Env):
         # Multi-Agent (returns object of objects)
         else:
             # Generate Agents
-            self.agents = [agent(gridSize, self.grid, i) for i in range(numAgents)]
+            self.agents = []
+            for i in range(numAgents):
+                self.agents.append(agent(self.agents, gridSize, self.grid, i))
+                print(self.agents)
+            # self.agents = [agent(self.agents, gridSize, self.grid, i) for i in range(numAgents)]
             print(self.agents)
             # Generate Plots (should this go in _render()?)
-            self.fig, self.ax, self.cmap = plot().multiInit(numAgents, self.interactive)
+            self.fig, self.ax, self.cmap = plot().multiInit(self.agents, self.interactive)
 
         # print('Environment "mapSim-v1" Successfully Initialized')
 
@@ -66,13 +70,16 @@ class MapSimEnv(gym.Env):
     def _step(self, action, ind):
         self.step_count += 1
         if self.numAgents == 1:
-            self.agents = self.agents.update_position(action, self.grid)
+            self.agents = self.agents.update_position(self.agents, action, self.grid)
             self.agents = self.agents.get_reward(self.gridSize)
             reward = self.agents.reward
             self.ax, img = self.get_image()
         else:
-            self.agents[ind] = self.agents[ind].update_position(action, self.grid)
+            self.agents[ind] = self.agents[ind].update_position(self.agents, action, self.grid, not ind)
+            self.agents, self.cmap = self.agents[ind].shareMap(self.agents, self.gridSize, ind)
             self.agents[ind] = self.agents[ind].get_reward(self.gridSize)
+            print('Agent 0 Position: ' + str(self.agents[0].location))
+            print('Agent 1 Position: ' + str(self.agents[1].location))
             reward = self.agents[ind].reward
             self.ax, img = self.get_image()
             # img = []
@@ -125,9 +132,16 @@ class MapSimEnv(gym.Env):
         # Multi-Agent (returns object of objects)
         else:
             # Generate Agents
-            self.agents = [agent(self.gridSize, self.grid, i) for i in range(self.numAgents)]
+            self.agents = []
+            # self.agents = [agent(self.agents, self.gridSize, self.grid, i) for i in range(self.numAgents)]
+            for i in range(self.numAgents):
+                self.agents.append(agent(self.agents, self.gridSize, self.grid, i))
+                print(self.agents)
             # Generate Plots (should this go in _render()?)
-            self.fig, self.ax, self.cmap = plot().multiInit(self.numAgents, self.interactive)
+            # self.cmap = ListedColormap(['w', 'b', 'k', 'r'])
+            self.fig, self.ax, self.cmap = plot().multiInit(self.agents, self.interactive)
+            # self.cmap = ListedColormap(['w', 'b', 'k', 'r'])
+            self.ax = plot().multiUpdate(self.ax, self.cmap, self.agents, self.numAgents, self.interactive)
 
         self.ax, img = self.get_image()
 
@@ -213,27 +227,37 @@ class generate:
         return location, grid
 
 class agent:
-    def __init__(self, gridSize, grid, ID):
+    def __init__(self, agents, gridSize, grid, ID):
         self.id = ID+3
         # Need to add function that ensures starting position is valid
         # self.location = (random.randint(1, gridSize[0]-1), random.randint(1, gridSize[0]-1))
-        self.location = self.init_location(gridSize, grid)
+        self.location = self.init_location(agents, gridSize, grid, ID)
         self.map = numpy.matlib.repmat(2, gridSize[0], gridSize[1])
         self.map[self.location[0], self.location[1]] = ID+2
         self.reward = 0
         self.r_old = 0
         self.gridSize = gridSize
         self.img= []
+        self.old_loc = self.location
 
-    def init_location(self, gridSize, grid):
+    def init_location(self, agents, gridSize, grid, ID):
         valid = 'false'
         while valid == 'false':
             tempLocation = (random.randint(1, gridSize[0]-1), random.randint(1, gridSize[0]-1))
-            if (tempLocation[0] > 1 and tempLocation[1] > 1 and tempLocation[0] < gridSize[0]-1 and tempLocation[1] < gridSize[1]-1):
+            if (tempLocation[0] > 1 and tempLocation[1] >= 1 and tempLocation[0] < gridSize[0]-1 and tempLocation[1] < gridSize[1]-1):
                 if grid[tempLocation[0], tempLocation[1]] == 0:
-                    valid = 'true'
-                    location = tempLocation
-
+                    # print('ID = '+str(ID))
+                    # print(agents)
+                    if ID == 0:
+                        valid = 'true'
+                        location = tempLocation
+                    elif abs(tempLocation[0]-agents[0].location[0])>1 and abs(tempLocation[1]-agents[0].location[1])>1:
+                        print('First agents location: '+str(agents[0].location))
+                        print('Second agents location: '+str(tempLocation))
+                        valid = 'true'
+                        location = tempLocation
+                    else:
+                        print('Invalid Initial Location Selected - Retrying')
         return location
 
 
@@ -248,21 +272,22 @@ class agent:
 #         return self, ax, img
         return self, ax
 
-    def update_position(self, action, grid): # Incomplete
+    def update_position(self, agents, action, grid, other_ind): # Incomplete
         self.map[self.location[0], self.location[1]] = grid[self.location[0], self.location[1]]
-        self = self.validate_action(action, grid)
+        self = self.validate_action(agents, action, grid, other_ind)
         self.map[self.location[0], self.location[1]] = self.id
         self = self.view(grid)
         return self
 
 
-    def validate_action(self, action, grid): # Incomplete
+    def validate_action(self, agents, action, grid, other_ind): # Incomplete
         self.valid = 'false'
         tempLocation = self.direction(action)
         if (tempLocation[0] > 1 and tempLocation[1] > 1 and tempLocation[0] < self.gridSize[0]-1 and tempLocation[1] < self.gridSize[1]-1):
             if grid[tempLocation[0], tempLocation[1]] == 0:
-                self.location = tempLocation
-                self.valid = 'true'
+                if tempLocation[0] != agents[other_ind].location[0] and tempLocation[1] != agents[other_ind].location[1]:
+                    self.location = tempLocation
+                    self.valid = 'true'
         # if valid == 'false':
             # self.reward -= 1
         return self
@@ -308,21 +333,43 @@ class agent:
             agents = self.shareMap(agents, gridSize)
         return agents, met, cmap
 
-    def meet(self, agents, gridSize, met, cmap):
-        if (abs(agents[0].location[0]-agents[1].location[0]) <= 1 and abs(agents[0].location[1]-agents[1].location[1] <= 1)):
+    def meet(self, agents, gridSize, ind):
+        if (abs(agents[0].location[0]-agents[1].location[0]) <= 1 and abs(agents[0].location[1]-agents[1].location[1]) <= 1):
+            print('Agents Met')
+            print('Agent Zero Location: ' + str(agents[0].location))
+            print('Agent One Location: ' + str(agents[1].location))
             met = 'true'
-            cmap = ListedColormap(['w', 'b', 'k', 'r', 'g'])
+            if ind == 0:
+                cmap = ListedColormap(['w', 'b', 'k', 'r', 'g'])
+            else:
+                cmap = ListedColormap(['w', 'b', 'k', 'g', 'r'])
+
+        else:
+            met = 'false'
+            cmap = ListedColormap(['w', 'b', 'k', 'r'])
         return met, cmap
 
-    def shareMap(self, agents, gridSize):
-        for i in range(0, gridSize[0]):
-            for j in range(0, gridSize[1]):
-                if (agents[0].map[i, j] < 2 and [i, j] != agents[1].location) or (agents[0].map[i, j] == agents[0].id and agents[0].location != agents[1].location):
-                    agents[1].map[i, j] = agents[0].map[i, j]
-                elif sum(numpy.matlib.rempat(2, grid))(agents[1].map[i, j] < 2 and [i, j] != agents[0].location) or (agents[1].map[i, j] == agents[1].id and agents[1].location != agents[0].location):
-                    agents[0].map[i, j] = agents[1].map[i, j]
+    def shareMap(self, agents, gridSize, ind):
+        met, cmap = self.meet(agents, gridSize, ind)
+        if met == 'true':
+            print('Sharing Map Info')
+            for i in range(0, gridSize[0]):
+                for j in range(0, gridSize[1]):
+                    if (agents[0].map[i, j] < 2 and [i, j] != agents[1].location) or (agents[0].map[i, j] == agents[0].id and agents[0].location != agents[1].location):
+                        agents[1].map[i, j] = agents[0].map[i, j]
+                    elif (agents[1].map[i, j] < 2 and [i, j] != agents[0].location) or (agents[1].map[i, j] == agents[1].id and agents[1].location != agents[0].location):
+                        agents[0].map[i, j] = agents[1].map[i, j]
+        else:
+            for i in range(2):
+                for j in (1, 0):
+                    if agents[i].map[agents[j].old_loc[0], agents[j].old_loc[1]] >= 3 and agents[j].old_loc[0] != agents[i].location[0] and agents[j].old_loc[1] != agents[i].location[1]:
+                        print('Overwriting Agent ' + str(i) +'s storage of agent ' + str(j) + 's location')
+                        agents[i].map[agents[j].old_loc[0], agents[j].old_loc[1]] = 0
 
-        return agents
+        for i in range(2):
+            agents[i].old_loc = agents[i].location
+
+        return agents, cmap
 
     def get_reward(self, gridSize):
         #r = sum(abs(sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[0].map)+sum(numpy.matlib.repmat(2, gridSize[0], gridSize[1])-agents[1].map)))/(gridSize[0]*gridSize[1]*4)
@@ -357,7 +404,8 @@ class plot:
         cmap = ListedColormap(['w', 'b', 'k', 'r'])
         return ax, cmap, fig
 
-    def multiInit(self, numAgents, interactive):
+    def multiInit(self, agents, interactive):
+        print('Generating New Map')
         if interactive == 'False':
             plt.ioff()
         else:
@@ -368,7 +416,8 @@ class plot:
         ax1 = fig1.add_subplot(1, 1, 1)
         ax2 = fig2.add_subplot(1, 1, 1)
         ax = (ax1, ax2)
-        cmap = ListedColormap(['w', 'b', 'k', 'r'])
+        # cmap = ListedColormap(['w', 'b', 'k', 'r'])
+        met, cmap = agents[0].meet(agents, [], [])
 
         return fig, ax, cmap
 
@@ -390,8 +439,8 @@ class plot:
         return ax
 
     def showGrid(self, grid) :
-        fig1 = plt.figure(2)
-        ax1 = fig1.add_subplot(111)
+        fig13 = plt.figure(2)
+        ax1 = fig3.add_subplot(111)
         cmap = ListedColormap(['w', 'k'])
         ax1.matshow(grid, cmap=cmap)
         plt.draw()

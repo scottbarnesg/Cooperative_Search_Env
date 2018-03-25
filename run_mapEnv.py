@@ -43,7 +43,7 @@ class GymVecEnv(VecEnv):
         imgs = []
         # print('action_n = ' + str(action_n))
         for (a,env) in zip(action_n, self.envs):
-            ob, rew, done, info = env.step(action_n[ind], ind) # MAY NOT BE CORRECT
+            ob, rew, done, info = env.step(a, ind) # MAY NOT BE CORRECT
             # plt.imshow(ob)
             # plt.draw()
             # plt.pause(0.000001)
@@ -250,4 +250,4 @@ if __name__ == '__main__':
         test(args.env, args.policy, args.seed, nstack=1)
     else:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-              policy=args.policy, lrschedule=args.lrschedule, num_cpu=4, continuous_actions=continuous_actions, numAgents=numAgents)
+              policy=args.policy, lrschedule=args.lrschedule, num_cpu=1, continuous_actions=continuous_actions, numAgents=numAgents)
