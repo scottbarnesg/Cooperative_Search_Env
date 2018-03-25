@@ -250,4 +250,4 @@ if __name__ == '__main__':
         test(args.env, args.policy, args.seed, nstack=1)
     else:
         train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-              policy=args.policy, lrschedule=args.lrschedule, num_cpu=1, continuous_actions=continuous_actions, numAgents=numAgents)
+              policy=args.policy, lrschedule=args.lrschedule, num_cpu=6, continuous_actions=continuous_actions, numAgents=numAgents)

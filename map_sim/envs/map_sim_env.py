@@ -27,7 +27,7 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[7, 7], numObjects=0, maxSize=8, numAgents=2, maxIters=15, interactive='False', test='False'):
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=8, numAgents=2, maxIters=150, interactive='False', test='False'):
         # random.seed(500) # TESTING SEED - Do Not Seed During Training
         # Set Simulation Params
         self.gridSize = gridSize
@@ -58,9 +58,9 @@ class MapSimEnv(gym.Env):
             self.agents = []
             for i in range(numAgents):
                 self.agents.append(agent(self.agents, gridSize, self.grid, i))
-                print(self.agents)
+                # print(self.agents)
             # self.agents = [agent(self.agents, gridSize, self.grid, i) for i in range(numAgents)]
-            print(self.agents)
+            # print(self.agents)
             # Generate Plots (should this go in _render()?)
             self.fig, self.ax, self.cmap = plot().multiInit(self.agents, self.interactive)
 
@@ -78,8 +78,8 @@ class MapSimEnv(gym.Env):
             self.agents[ind] = self.agents[ind].update_position(self.agents, action, self.grid, not ind)
             self.agents, self.cmap = self.agents[ind].shareMap(self.agents, self.gridSize, ind)
             self.agents[ind] = self.agents[ind].get_reward(self.gridSize)
-            print('Agent 0 Position: ' + str(self.agents[0].location))
-            print('Agent 1 Position: ' + str(self.agents[1].location))
+            # print('Agent 0 Position: ' + str(self.agents[0].location))
+            # print('Agent 1 Position: ' + str(self.agents[1].location))
             reward = self.agents[ind].reward
             self.ax, img = self.get_image()
             # img = []
@@ -136,7 +136,7 @@ class MapSimEnv(gym.Env):
             # self.agents = [agent(self.agents, self.gridSize, self.grid, i) for i in range(self.numAgents)]
             for i in range(self.numAgents):
                 self.agents.append(agent(self.agents, self.gridSize, self.grid, i))
-                print(self.agents)
+                # print(self.agents)
             # Generate Plots (should this go in _render()?)
             # self.cmap = ListedColormap(['w', 'b', 'k', 'r'])
             self.fig, self.ax, self.cmap = plot().multiInit(self.agents, self.interactive)
@@ -252,12 +252,12 @@ class agent:
                         valid = 'true'
                         location = tempLocation
                     elif abs(tempLocation[0]-agents[0].location[0])>1 and abs(tempLocation[1]-agents[0].location[1])>1:
-                        print('First agents location: '+str(agents[0].location))
-                        print('Second agents location: '+str(tempLocation))
+                        # print('First agents location: '+str(agents[0].location))
+                        # print('Second agents location: '+str(tempLocation))
                         valid = 'true'
                         location = tempLocation
-                    else:
-                        print('Invalid Initial Location Selected - Retrying')
+                    # else:
+                        # print('Invalid Initial Location Selected - Retrying')
         return location
 
 
@@ -335,9 +335,9 @@ class agent:
 
     def meet(self, agents, gridSize, ind):
         if (abs(agents[0].location[0]-agents[1].location[0]) <= 1 and abs(agents[0].location[1]-agents[1].location[1]) <= 1):
-            print('Agents Met')
-            print('Agent Zero Location: ' + str(agents[0].location))
-            print('Agent One Location: ' + str(agents[1].location))
+            # print('Agents Met')
+            # print('Agent Zero Location: ' + str(agents[0].location))
+            # print('Agent One Location: ' + str(agents[1].location))
             met = 'true'
             if ind == 0:
                 cmap = ListedColormap(['w', 'b', 'k', 'r', 'g'])
@@ -352,7 +352,7 @@ class agent:
     def shareMap(self, agents, gridSize, ind):
         met, cmap = self.meet(agents, gridSize, ind)
         if met == 'true':
-            print('Sharing Map Info')
+            # print('Sharing Map Info')
             for i in range(0, gridSize[0]):
                 for j in range(0, gridSize[1]):
                     if (agents[0].map[i, j] < 2 and [i, j] != agents[1].location) or (agents[0].map[i, j] == agents[0].id and agents[0].location != agents[1].location):
@@ -363,7 +363,7 @@ class agent:
             for i in range(2):
                 for j in (1, 0):
                     if agents[i].map[agents[j].old_loc[0], agents[j].old_loc[1]] >= 3 and agents[j].old_loc[0] != agents[i].location[0] and agents[j].old_loc[1] != agents[i].location[1]:
-                        print('Overwriting Agent ' + str(i) +'s storage of agent ' + str(j) + 's location')
+                        # print('Overwriting Agent ' + str(i) +'s storage of agent ' + str(j) + 's location')
                         agents[i].map[agents[j].old_loc[0], agents[j].old_loc[1]] = 0
 
         for i in range(2):
@@ -405,7 +405,7 @@ class plot:
         return ax, cmap, fig
 
     def multiInit(self, agents, interactive):
-        print('Generating New Map')
+        # print('Generating New Map')
         if interactive == 'False':
             plt.ioff()
         else:
