@@ -107,9 +107,9 @@ def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_a
 
     env = GymVecEnv([make_env(idx) for idx in range(num_cpu)])
     policy_fn = policy_fn_name(policy)
-    learn(policy_fn, env, seed, nsteps=30, nstack=1, total_timesteps=int(num_timesteps * 1.1), lr=7e-4, lrschedule=lrschedule, continuous_actions=continuous_actions, numAgents=numAgents, continueTraining=False, debug=False)
+    learn(policy_fn, env, seed, nsteps=30, nstack=1, total_timesteps=int(num_timesteps * 1.1), lr=7e-4, lrschedule=lrschedule, continuous_actions=continuous_actions, numAgents=numAgents, continueTraining=True, debug=False)
 
-def test(env_id, policy_name, seed, nstack=1):
+def test(env_id, policy_name, seed, nstack=1, numAgents=2):
     iters = 100
     rwd = []
     percent_exp = []
@@ -150,12 +150,19 @@ def test(env_id, policy_name, seed, nstack=1):
     alpha=0.99
     continuous_actions=False
     debug=False
-    # if i == 0:
-    model = Model(policy=policy_fn, ob_space=ob_space, ac_space=ac_space, nenvs=1, nsteps=nsteps, nstack=nstack, num_procs=1, ent_coef=ent_coef, vf_coef=vf_coef,
+    if numAgents == 1:
+        model = Model(policy=policy_fn, ob_space=ob_space, ac_space=ac_space, nenvs=1, nsteps=nsteps, nstack=nstack, num_procs=1, ent_coef=ent_coef, vf_coef=vf_coef,
                   max_grad_norm=max_grad_norm, lr=lr, alpha=alpha, epsilon=epsilon, total_timesteps=total_timesteps, lrschedule=lrschedule, continuous_actions=continuous_actions, debug=debug)
-
-    m_name = 'test_model_Mar7_1mil.pkl'
-    model.load(m_name)
+        m_name = 'test_model_Mar7_1mil.pkl'
+        model.load(m_name)
+    else:
+        model = []
+        for i in range(numAgents):
+            model.append(Model(policy=policy_fn, ob_space=ob_space, ac_space=ac_space, nenvs=1, nsteps=nsteps, nstack=nstack, num_procs=1, ent_coef=ent_coef, vf_coef=vf_coef,
+                      max_grad_norm=max_grad_norm, lr=lr, alpha=alpha, epsilon=epsilon, total_timesteps=total_timesteps, lrschedule=lrschedule, continuous_actions=continuous_actions, debug=debug))
+        for i in range(numAgents):
+            n_name = 'test_model_' + str(i) + '100k.pkl'
+            model[i].load(m_name)
 
     env.env, img = env.reset()
     print('---------------------------------------------')
@@ -178,50 +185,57 @@ def test(env_id, policy_name, seed, nstack=1):
             shutil.rmtree(frames_dir)
         os.makedirs(frames_dir)
         # ax, img = get_img(env)
-        img_hist = deque([img for _ in range(4)], maxlen=nstack)
+        img_hist = []
+        for i in range(numAgents):
+            img_hist.append(deque([img[i] for _ in range(4)], maxlen=nstack))
         action = 0
-        total_rewards = 0
-        nstack = 2
+        total_rewards = [0, 0]
+        nstack = 1
         for tidx in range(1000):
             # if tidx % nstack == 0:
-            if tidx > 0:
-                input_imgs = np.expand_dims(np.squeeze(np.stack(img_hist, -1)), 0)
-                # print(np.shape(input_imgs))
-                # plt.imshow(input_imgs[0, :, :, 0])
-                # plt.imshow(input_imgs[0, :, :, 1])
-                # plt.draw()
-                # plt.pause(0.000001)
-                if input_imgs.shape == (1, 84, 84, 3):
-                    actions, values, states = model.step_model.step(input_imgs)
-                else:
-                    actions, values, states = model.step_model.step(input_imgs[:, :, :, :, 0])
-                # actions, values, states = model.step_model.step(input_imgs)
-                action = actions[0]
-                value = values[0]
-                # print('Value: ', value, '   Action: ', action)
+            for i in range(numAgents):
+                if tidx > 0:
+                    input_imgs = np.expand_dims(np.squeeze(np.stack(img_hist, -1)), 0)
+                    # print(np.shape(input_imgs))
+                    # plt.imshow(input_imgs[0, :, :, 0])
+                    # plt.imshow(input_imgs[0, :, :, 1])
+                    # plt.draw()
+                    # plt.pause(0.000001)
+                    if input_imgs.shape == (1, 84, 84, 3):
+                        actions, values, states = model[i].step_model.step(input_imgs)
+                    else:
+                        actions, values, states = model[i].step_model.step(input_imgs[:, :, :, :, 0])
+                    # actions, values, states = model.step_model.step(input_imgs)
+                    action = actions[0]
+                    value = values[0]
+                    # print('Value: ', value, '   Action: ', action)
 
-            img, reward, done, _ = env.step(action)
-            total_rewards += reward
-            # img = get_img(env)
-            img_hist.append(img)
-            imsave(os.path.join(frames_dir, 'frame_{:04d}.png'.format(tidx)), resize(img, (img_shape[0], img_shape[1], 3)))
+                img, reward, done, _ = env.step(action, i)
+                total_rewards[i] += reward
+                # img = get_img(env)
+                img_hist[i].append(img)
+                imsave(os.path.join(frames_dir, 'frame_{:04d}.png'.format(tidx)), resize(img, (img_shape[0], img_shape[1], 3)))
             # print(tidx, '\tAction: ', action, '\tValues: ', value, '\tRewards: ', reward, '\tTotal rewards: ', total_rewards)#, flush=True)
             if done:
                 # print('Faultered at tidx: ', tidx)
-                rwd.append(total_rewards)
-                percent_exp.append(env.env.percent_explored)
+                rwd = []
+                percent_exp = []
+                for i in range(numAgents):
+                    rwd.append(total_rewards[i])
+                    percent_exp.append(env.env.percent_explored)
                 env.env, img = env.reset()
                 break
-
-    print('-----------------------------------')
-    print('Iteration: ', iters)
-    avg_rwd = sum(rwd)/iters
-    avg_pct_exp = sum(percent_exp)/iters
-    med_pct_exp = statistics.median(percent_exp)
-    print('Average Reward: ', avg_rwd)
-    print('Average Percent Explored: ', avg_pct_exp, '%')
-    print('Median Percent Explored: ', med_pct_exp)
-    print('-----------------------------------')
+    for i in range(numAgents)
+        print('-----------------------------------')
+        print('Agent ' + str(i))
+        print('Iteration: ', iters)
+        avg_rwd = sum(rwd[i])/iters
+        avg_pct_exp = sum(percent_exp[i])/iters
+        med_pct_exp = statistics.median(percent_exp)
+        print('Average Reward: ', avg_rwd)
+        print('Average Percent Explored: ', avg_pct_exp, '%')
+        print('Median Percent Explored: ', med_pct_exp)
+        print('-----------------------------------')
 
 if __name__ == '__main__':
     import argparse
