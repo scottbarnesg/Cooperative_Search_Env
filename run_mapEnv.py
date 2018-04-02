@@ -159,41 +159,46 @@ def test(env_id, policy_name, seed, nstack=1, numAgents=2):
         model = []
         for i in range(numAgents):
             model.append(Model(policy=policy_fn, ob_space=ob_space, ac_space=ac_space, nenvs=1, nsteps=nsteps, nstack=nstack, num_procs=1, ent_coef=ent_coef, vf_coef=vf_coef,
-                      max_grad_norm=max_grad_norm, lr=lr, alpha=alpha, epsilon=epsilon, total_timesteps=total_timesteps, lrschedule=lrschedule, continuous_actions=continuous_actions, debug=debug))
+                      max_grad_norm=max_grad_norm, lr=lr, alpha=alpha, epsilon=epsilon, total_timesteps=total_timesteps, lrschedule=lrschedule, continuous_actions=continuous_actions, debug=debug, itr=i))
         for i in range(numAgents):
-            n_name = 'test_model_' + str(i) + '100k.pkl'
+            m_name = 'test_model_' + str(i) + '_300k.pkl' # + '100k.pkl'
             model[i].load(m_name)
+            print('---------------------------------------------')
+            print("Successfully Loaded: ", m_name)
+            print('---------------------------------------------')
 
     env.env, img = env.reset()
-    print('---------------------------------------------')
-    print("Initializing Test for: ", m_name)
-    print('---------------------------------------------')
+    rwd = [[], []]
+    percent_exp = [[], []]
     for i in range(1, iters+1):
         if i % 10 == 0:
-            print('-----------------------------------')
-            print('Iteration: ', i)
-            avg_rwd = sum(rwd)/i
-            avg_pct_exp = sum(percent_exp)/i
-            med_pct_exp = statistics.median(percent_exp)
-            print('Average Reward: ', avg_rwd)
-            print('Average Percent Explored: ', avg_pct_exp, '%')
-            print('Median Percent Explored: ', med_pct_exp)
-            print('-----------------------------------')
-        frames_dir = 'exp_frames' + str(i+100)
-        if os.path.exists(frames_dir):
-            # raise ValueError('Frames directory already exists.')
-            shutil.rmtree(frames_dir)
-        os.makedirs(frames_dir)
+            for j in range(numAgents):
+                print('-----------------------------------')
+                print('Agent ' + str(j))
+                print('Iteration: ', i)
+                avg_rwd = sum(rwd[j])/i
+                avg_pct_exp = sum(percent_exp[j])/i
+                med_pct_exp = statistics.median(percent_exp[j])
+                print('Average Reward: ', avg_rwd)
+                print('Average Percent Explored: ', avg_pct_exp, '%')
+                print('Median Percent Explored: ', med_pct_exp)
+                print('-----------------------------------')
         # ax, img = get_img(env)
         img_hist = []
-        for i in range(numAgents):
-            img_hist.append(deque([img[i] for _ in range(4)], maxlen=nstack))
+        frames_dir = []
+        for j in range(numAgents):
+            frames_dir.append('exp_frames' + str(j*100+i+200))
+            if os.path.exists(frames_dir[j]):
+                # raise ValueError('Frames directory already exists.')
+                shutil.rmtree(frames_dir[j])
+            os.makedirs(frames_dir[j])
+            img_hist.append(deque([img[j] for _ in range(4)], maxlen=nstack))
         action = 0
         total_rewards = [0, 0]
         nstack = 1
         for tidx in range(1000):
             # if tidx % nstack == 0:
-            for i in range(numAgents):
+            for j in range(numAgents):
                 if tidx > 0:
                     input_imgs = np.expand_dims(np.squeeze(np.stack(img_hist, -1)), 0)
                     # print(np.shape(input_imgs))
@@ -202,36 +207,34 @@ def test(env_id, policy_name, seed, nstack=1, numAgents=2):
                     # plt.draw()
                     # plt.pause(0.000001)
                     if input_imgs.shape == (1, 84, 84, 3):
-                        actions, values, states = model[i].step_model.step(input_imgs)
+                        actions, values, states = model[j].step_model.step(input_imgs)
                     else:
-                        actions, values, states = model[i].step_model.step(input_imgs[:, :, :, :, 0])
+                        actions, values, states = model[j].step_model.step(input_imgs[:, :, :, :, 0])
                     # actions, values, states = model.step_model.step(input_imgs)
                     action = actions[0]
                     value = values[0]
                     # print('Value: ', value, '   Action: ', action)
 
-                img, reward, done, _ = env.step(action, i)
-                total_rewards[i] += reward
+                img, reward, done, _ = env.step(action, j)
+                total_rewards[j] += reward
                 # img = get_img(env)
-                img_hist[i].append(img)
-                imsave(os.path.join(frames_dir, 'frame_{:04d}.png'.format(tidx)), resize(img, (img_shape[0], img_shape[1], 3)))
+                img_hist[j].append(img[j])
+                imsave(os.path.join(frames_dir[j], 'frame_{:04d}.png'.format(tidx)), resize(img[j], (img_shape[0], img_shape[1], 3)))
             # print(tidx, '\tAction: ', action, '\tValues: ', value, '\tRewards: ', reward, '\tTotal rewards: ', total_rewards)#, flush=True)
             if done:
                 # print('Faultered at tidx: ', tidx)
-                rwd = []
-                percent_exp = []
-                for i in range(numAgents):
-                    rwd.append(total_rewards[i])
-                    percent_exp.append(env.env.percent_explored)
-                env.env, img = env.reset()
+                for j in range(numAgents):
+                    rwd[j].append(total_rewards[j])
+                    percent_exp[j].append(env.env.percent_explored[j])
+                # env.env, img = env.reset()
                 break
-    for i in range(numAgents)
+    for i in range(numAgents):
         print('-----------------------------------')
         print('Agent ' + str(i))
         print('Iteration: ', iters)
         avg_rwd = sum(rwd[i])/iters
         avg_pct_exp = sum(percent_exp[i])/iters
-        med_pct_exp = statistics.median(percent_exp)
+        med_pct_exp = statistics.median(percent_exp[i])
         print('Average Reward: ', avg_rwd)
         print('Average Percent Explored: ', avg_pct_exp, '%')
         print('Median Percent Explored: ', med_pct_exp)

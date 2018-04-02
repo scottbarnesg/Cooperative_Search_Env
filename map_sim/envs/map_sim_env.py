@@ -27,8 +27,8 @@ class MapSimEnv(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
     }
-    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=8, numAgents=2, maxIters=150, interactive='False', test='False'):
-        # random.seed(500) # TESTING SEED - Do Not Seed During Training
+    def __init__(self, gridSize=[20, 20], numObjects=20, maxSize=8, numAgents=2, maxIters=300, interactive='False', test='False'):
+        # random.seed(100) # TESTING SEED - Do Not Seed During Training
         # Set Simulation Params
         self.gridSize = gridSize
         self.numAgents = numAgents
@@ -99,11 +99,12 @@ class MapSimEnv(gym.Env):
                 self.percent_explored = self.agents.percent_exp(self.gridSize)
                 print('Percent Explored: ' + str(self.agents.percent_exp(self.gridSize)) + '%')
             else:
+                self.percent_explored = [[],[]]
                 for i in range(self.numAgents):
-                    self.percent_explored = self.agents[i].percent_exp(self.gridSize)
-                    if self.interactive == 'True':
-                        print('Agent ' + str(i) + ' | ' + 'Percent Explored: ' + str(self.agents[i].percent_exp(self.gridSize)) + '%')
-            if self.test == 'False':
+                    self.percent_explored[i] = self.agents[i].percent_exp(self.gridSize)
+                    # if self.interactive == 'True':
+                    print('Agent ' + str(i) + ' | ' + 'Percent Explored: ' + str(self.agents[i].percent_exp(self.gridSize)) + '%')
+            if self.test == 'False': # Leave false for multi-agent testing
                 self._reset()
         else:
             done = 0
@@ -172,7 +173,7 @@ class MapSimEnv(gym.Env):
         img = img.resize(img_shape[0:2])
         return img
 
-    def render_img(self, agent_ID=1):
+    def render_img(self, agent_ID=1): # rewrite to avoid writing img to disk
         if self.numAgents == 1:
             filename = 'img' + str(self.simID) + '.png'
             self.fig.savefig(filename, bbox_inches='tight')
@@ -182,6 +183,7 @@ class MapSimEnv(gym.Env):
             filename = 'img' + str(self.simID) + str(agent_ID) + '.png'
             self.fig[agent_ID].savefig(filename, bbox_inches='tight')
             img = Image.open(filename)
+            # img = Image.get_current_fig_manager().canvas
         # canvas = FigureCanvas(self.fig)
         # canvas.draw()
         # img = np.fromstring(canvas.tostring_rgb(), dtype='uint8')

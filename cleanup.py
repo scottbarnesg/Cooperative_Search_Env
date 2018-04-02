@@ -2,7 +2,7 @@ import os, shutil
 
 print('Running Cleanup')
 count = 0
-for i in range(301):
+for i in range(1001):
     frames_dir = 'exp_frames' + str(i)
     if os.path.exists(frames_dir):
         count = count + 1
