@@ -43,7 +43,7 @@ def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_a
     # print('action space: ', env.action_space)
     # env = GymVecEnv([make_env(idx) for idx in range(num_cpu)])
     policy_fn = policy_fn_name(policy)
-    learn(policy_fn, env, seed, nsteps=30, nstack=1, total_timesteps=int(num_timesteps * 1.1), lr=7e-4, lrschedule=lrschedule, continuous_actions=continuous_actions, numAgents=numAgents, continueTraining=False, debug=False, particleEnv=True, model_name='partEnv_model_')
+    learn(policy_fn, env, seed, nsteps=30, nstack=1, total_timesteps=int(num_timesteps * 1.1), lr=1e-5, lrschedule=lrschedule, continuous_actions=continuous_actions, numAgents=numAgents, continueTraining=False, debug=False, particleEnv=True, model_name='partEnv_model_')
 
 
 def policy_fn_name(policy_name):
