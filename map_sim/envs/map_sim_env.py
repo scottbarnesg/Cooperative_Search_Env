@@ -34,7 +34,9 @@ class MapSimEnv(gym.Env):
         self.numAgents = numAgents
         self.maxSize = maxSize
         self.test = test
+        self.n = numAgents
         # self.action_space = (0, 1, 2, 3)
+        # self.action_space = [spaces.Discrete(4), spaces.Discrete(4)]
         self.action_space = spaces.Discrete(4)
         self.step_count = 0
         self.maxIters = maxIters
@@ -46,6 +48,8 @@ class MapSimEnv(gym.Env):
         self.grid = generate().world(gridSize, numObjects, maxSize)
         # plot().showGrid(self.grid)
         self.simID = random.randint(1000000, 2000000)
+        img_shape = (84, 84, 3)
+        self.observation_space = spaces.Box(low=0, high=255, shape=img_shape)
         # Single Agent (return single object)
         if numAgents == 1:
             # Generate Agents
@@ -241,6 +245,7 @@ class agent:
         self.gridSize = gridSize
         self.img= []
         self.old_loc = self.location
+        self.met_count = 0
 
     def init_location(self, agents, gridSize, grid, ID):
         valid = 'false'
@@ -337,7 +342,8 @@ class agent:
 
     def meet(self, agents, gridSize, ind):
         if (abs(agents[0].location[0]-agents[1].location[0]) <= 1 and abs(agents[0].location[1]-agents[1].location[1]) <= 1):
-            # print('Agents Met')
+            self.met_count += 1
+            print('Agents Met: ', self.met_count)
             # print('Agent Zero Location: ' + str(agents[0].location))
             # print('Agent One Location: ' + str(agents[1].location))
             met = 'true'

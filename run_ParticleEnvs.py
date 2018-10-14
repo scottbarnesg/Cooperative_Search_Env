@@ -21,6 +21,16 @@ from baselines.a2c.policies import CnnPolicy, LstmPolicy, LnLstmPolicy, MlpPolic
 from baselines.a2c.utils import fc, conv, conv_to_fc, sample
 
 
+class envVec(VecEnv):
+    def __init__(self, env_fns):
+        self.envs = [fn() for fn in env_fns]
+        env = self.envs[0]
+        self.action_space = env.action_space
+        self.observation_space = env.observation_space
+
+
+
+
 def make_env(scenario_name, benchmark=False):
     from multiagent.environment import MultiAgentEnv
     import multiagent.scenarios as scenarios
@@ -39,11 +49,12 @@ def make_env(scenario_name, benchmark=False):
 
 def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu, continuous_actions=False, numAgents=2, benchmark=False):
     # Create environment
+    # env = envVec([make_env(idx, benchmark) for idx in range(num_cpu)])
     env = make_env(env_id, benchmark)
     # print('action space: ', env.action_space)
     # env = GymVecEnv([make_env(idx) for idx in range(num_cpu)])
     policy_fn = policy_fn_name(policy)
-    learn(policy_fn, env, seed, nsteps=30, nstack=1, total_timesteps=int(num_timesteps * 1.1), lr=1e-5, lrschedule=lrschedule, continuous_actions=continuous_actions, numAgents=numAgents, continueTraining=False, debug=False, particleEnv=True, model_name='partEnv_model_')
+    learn(policy_fn, env, seed, nsteps=128, nstack=1, total_timesteps=int(num_timesteps * 1.1), lr=1e-2, lrschedule=lrschedule, continuous_actions=continuous_actions, numAgents=numAgents, continueTraining=False, debug=False, particleEnv=True, model_name='partEnv_model_')
 
 
 def policy_fn_name(policy_name):
@@ -65,7 +76,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
     parser.add_argument('--policy', help='Policy architecture', choices=['cnn', 'lstm', 'lnlstm', 'mlp'], default='mlp')
     parser.add_argument('--lrschedule', help='Learning rate schedule', choices=['constant', 'linear'], default='constant')
-    parser.add_argument('--num-timesteps', type=int, default=int(10e7))
+    parser.add_argument('--num-timesteps', type=int, default=int(1e7))
     parser.add_argument('-c', '--continuous_actions', default=False, action='store_true')
     parser.add_argument('--test', default=False, action='store_true')
     parser.add_argument('--interactive', default=False, action='store_true')
